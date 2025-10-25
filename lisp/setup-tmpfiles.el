@@ -16,6 +16,7 @@
                   "backups"
                   "bookmarks"
                   "eshell"
+                  "eln-cache"
                   "locks"
                   "tmp"
                   "tramp"

@@ -13,6 +13,14 @@
   (make-directory cache-dir t))
 (setq package-quickstart t)
 
+;; Redirect native-comp eln cache under XDG cache (~/.cache/emacs/eln-cache)
+(let* ((xdg-cache (or (getenv "XDG_CACHE_HOME") (expand-file-name "~/.cache")))
+       (eln-cache (file-name-as-directory (expand-file-name "emacs/eln-cache" xdg-cache))))
+  (when (and (fboundp 'native-comp-available-p)
+             (native-comp-available-p)
+             (fboundp 'startup-redirect-eln-cache))
+    (startup-redirect-eln-cache eln-cache)))
+
 ;; Reduce costly frame resizes during theme/UI setup
 (setq frame-inhibit-implied-resize t)
 (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
