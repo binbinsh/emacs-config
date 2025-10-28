@@ -1,24 +1,21 @@
 # Emacs Config (macOS + Ubuntu)
 
-Quick install (URL):
+### Quick install
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/main/install-emacs.sh)"
 ```
 
-Notes:
-- macOS installs Emacs via Homebrew emacs-plus (GUI) and common CLI deps.
-- Ubuntu installs `emacs` (GUI) plus ripgrep, fd, cmake, libvterm, etc.
-- Python tools are managed with uv in `~/.emacs.d/.venv`.
+### Main features
+- **UI/UX**: Light `modus-operandi` theme, fullscreen by default, English/CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator, `which-key` (+ posframe), floating minibuffer (`mini-frame`), Helpful/Eldoc‑Box hovers.
+- **Completion & search**: Vertico, Orderless, Marginalia, Consult (+ LSP), Embark, Corfu + Cape + popup info, kind‑icon.
+- **Explorer & files**: Dirvish sidebar and enhanced Dired (icons, git info, quick preview, two‑pane), `diff-hl` fringe highlights.
+- **Terminal**: Integrated vterm panel toggle; terminal hub (SSH, remote Dired via TRAMP, tunnels); optional AI command suggestions via LM Studio.
+- **Git**: Magit workflow, inline blame overlays, delta‑enhanced diffs, optional AI commit messages.
+- **Python**: LSP (pyright), Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugging via `dap-mode`/debugpy.
+- **Markdown**: Auto live preview in a right split (xwidget‑webkit or EWW).
+- **Clipboard & perf**: `simpleclip` clipboard integration; smoother GC via `gcmh`.
 
-Key hints:
-- Command leader: press Super-; then key (e.g., `m` for M-x, `e` explorer, `` ` `` vterm).
-- Toggle terminal panel: Super-`.
-- Toggle explorer: Super-b.
-
-Troubleshooting:
-- If `fd` is missing on Ubuntu, the installer symlinks `fdfind` to `~/.local/bin/fd`.
-- If icons look wrong, run inside Emacs: `M-x all-the-icons-install-fonts`.
-- vterm needs cmake/libtool and libvterm; the installer sets these up.
-
-
+### Keys
+- All keybindings are centralized in `lisp/setup-keys.el`.
+- Global and mode-specific actions use `C-c` single keys.
