@@ -20,13 +20,9 @@
   :type '(choice (const :tag "vterm" vterm))
   :group 'my-terminal)
 
-(defcustom my/terminal-shell
-  (cond
-   ((eq system-type 'darwin) "/bin/zsh")
-   ((eq system-type 'gnu/linux)
-    (or (executable-find "zsh") "/bin/bash"))
-   (t (or (getenv "SHELL") "/bin/sh")))
-  "Shell executable used by the terminal backend (auto OS-detected)."
+(defcustom my/terminal-shell (or (getenv "SHELL")
+                                 (if (eq system-type 'darwin) "/bin/zsh" "/bin/bash"))
+  "Shell executable used by the terminal backend."
   :type 'string
   :group 'my-terminal)
 

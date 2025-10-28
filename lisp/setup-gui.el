@@ -32,13 +32,14 @@
     (when (display-graphic-p)
       (let* ((default-size 15)
              (english (or (my/find-first-font
-                           '("SF Mono" "Menlo" "Monaco"
-                             "FiraCode Nerd Font Mono" "JetBrains Mono" "DejaVu Sans Mono" "Ubuntu Mono"))
-                          "DejaVu Sans Mono"))
+                           '("JetBrainsMono NF" "JetBrains Mono" "Fira Code" "Hack" "DejaVu Sans Mono"
+                             "SF Mono" "Menlo" "Monaco"))
+                          "Monaco"))
              (cjk (or (my/find-first-font
-                       '("PingFang SC" "Hiragino Sans GB" "Noto Sans CJK SC"))
+                       '("Noto Sans CJK SC" "Noto Sans CJK" "PingFang SC" "Hiragino Sans GB"))
                       "Noto Sans CJK SC"))
-             (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))))
+             (emoji (or (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))
+                        nil)))
         (set-face-attribute 'default nil :font (format "%s-%d" english default-size))
         (dolist (charset '(han kana cjk-misc bopomofo))
           (set-fontset-font t charset (font-spec :name cjk)))
