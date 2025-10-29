@@ -24,6 +24,9 @@
     (add-to-list 'exec-path local-bin)
     (setenv "PATH" (concat local-bin path-separator (getenv "PATH")))))
 
+;; Personal profile (optional; safe if missing)
+(require 'setup-profile nil t)
+
 ;; Disable Custom file creation and loading
 (setq custom-file null-device)
 

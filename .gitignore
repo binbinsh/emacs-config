@@ -2,5 +2,4 @@
 .DS_Store
 elpa/
 custom.el
-package-quickstart.el
-package-quickstart.elc
+lisp/setup-profile.el

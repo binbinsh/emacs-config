@@ -1,0 +1,58 @@
+;;; setup-profile.el-example --- Machine/local profile (copy to setup-profile.el)
+
+;; Copy this file to lisp/setup-profile.el and edit values.
+;; The real lisp/setup-profile.el is ignored by Git.
+
+;; ----------------------------------------------------------------------------
+;; User identity
+;; ----------------------------------------------------------------------------
+
+(setq user-full-name "Your Name")
+(setq user-mail-address "you@example.com")
+
+;; ----------------------------------------------------------------------------
+;; Terminal hosts (used by commands in setup-terminal.el)
+;; ----------------------------------------------------------------------------
+;; Structure of each host (plist):
+;;  :name (string) unique name
+;;  :host (string) hostname or IP
+;;  :user (string) ssh user
+;;  :port (number, optional)
+;;  :identity-file (string, optional)
+;;  :proxy-jump (string, optional) e.g. "alice@bastion.example.com"
+;;  :tunnels (list of plists, optional)
+;;           Each tunnel: :type ("L" or "R"), :local ("[host:]port"), :remote ("[host:]port")
+;;  :labels (list of strings, optional)
+
+(setq my/terminal-hosts
+      '((:name "prod"
+         :host "prod.example.com"
+         :user "alice"
+         :port 22
+         :identity-file "~/.ssh/id_ed25519"
+         :labels ("prod" "eu")
+         :tunnels ((:type "L" :local "127.0.0.1:5433" :remote "db.internal:5432")))
+        (:name "bastion"
+         :host "bastion.example.com"
+         :user "alice"
+         :labels ("bastion"))
+        (:name "dev"
+         :host "10.0.0.10"
+         :user "alice"
+         :proxy-jump "alice@bastion.example.com"
+         :tunnels ((:type "R" :remote "0.0.0.0:18000" :local "127.0.0.1:8000")))))
+
+;; ----------------------------------------------------------------------------
+;; Optional terminal-related settings
+;; ----------------------------------------------------------------------------
+
+;; Shell used by vterm
+(setq my/terminal-shell (or (getenv "SHELL") (if (eq system-type 'darwin) "/bin/zsh" "/bin/bash")))
+
+;; Local LM Studio API settings for AI command suggestions
+(setq my/terminal-lmstudio-base-url "http://localhost:1234/v1")
+(setq my/terminal-lmstudio-model "gpt-oss-20b")
+
+(provide 'setup-profile)
+
+
