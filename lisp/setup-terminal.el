@@ -15,6 +15,23 @@
   :group 'tools
   :prefix "my/terminal-")
 
+;; ----------------------------------------------------------------------------
+;; TRAMP performance tuning
+;; ----------------------------------------------------------------------------
+;; - Enable SSH multiplexing (ControlMaster/ControlPersist)
+;; - Cache remote completions to reduce repeated stat calls
+;; - Disable VC on remote paths to avoid expensive VCS probes over TRAMP
+(with-eval-after-load 'tramp
+  (setq tramp-use-ssh-controlmaster-options t
+        tramp-ssh-controlmaster-options
+        "-o ControlMaster=auto -o ControlPath=~/.ssh/tramp.%%C -o ControlPersist=yes"
+        remote-file-name-inhibit-cache nil
+        tramp-completion-reread-directory-timeout 600
+        tramp-verbose 1)
+  (when (boundp 'vc-ignore-dir-regexp)
+    (setq vc-ignore-dir-regexp
+          (format "\\(%s\\)\\|\\(%s\\)" vc-ignore-dir-regexp tramp-file-name-regexp))))
+
 (defcustom my/terminal-backend 'vterm
   "Terminal backend to use. Currently only `vterm' is supported."
   :type '(choice (const :tag "vterm" vterm))
