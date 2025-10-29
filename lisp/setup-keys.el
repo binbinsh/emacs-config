@@ -12,7 +12,7 @@
 ;; - s: ripgrep
 ;; - e: toggle explorer
 ;; - v: toggle vterm panel
-;; - t: terminal menu
+;; - t: Remote Dired (TRAMP)
 ;; - g: Magit status
 ;; - [: prev tab   ]: next tab
 ;; - n: new tab    x: close tab
@@ -22,7 +22,7 @@
 ;;
 ;; Mode-specific leaders (auto-selected per buffer)
 ;; - Dired/Dirvish: o open, c copy, r rename, + mkdir, d delete, p preview, 2 two-panes
-;; - vterm: o open, h SSH, l terminal menu, a AI suggest, r list tunnels
+;; - vterm: o open, h SSH, l Remote Dired, a AI suggest, r list tunnels
 ;; - Magit: g status, b branch graph, h file history, a AI commit
 ;; - Python: a code action, r rename, f format, i organize imports, t pytest
 ;; - Markdown: l live preview
@@ -49,7 +49,7 @@
 (global-set-key (kbd "C-c m") #'execute-extended-command)
 (global-set-key (kbd "C-c o") #'find-file)
 (global-set-key (kbd "C-c h") #'my/terminal-ssh-connect)
-(global-set-key (kbd "C-c t") #'my/terminal-menu)
+(global-set-key (kbd "C-c t") #'my/terminal-remote-dired)
 (global-set-key (kbd "C-c u") #'vundo)
 (global-set-key (kbd "C-c [") #'tab-previous)
 (global-set-key (kbd "C-c ]") #'tab-next)
@@ -77,7 +77,7 @@
   (let ((map vterm-mode-map))
     (define-key map (kbd "C-c o") #'my/terminal-open)
     (define-key map (kbd "C-c h") #'my/terminal-ssh-connect)
-    (define-key map (kbd "C-c l") #'my/terminal-menu)
+    (define-key map (kbd "C-c l") #'my/terminal-remote-dired)
     (define-key map (kbd "C-c a") #'my/terminal-ai-suggest)
     (define-key map (kbd "C-c r") #'my/terminal-tunnel-list)))
 
