@@ -48,6 +48,7 @@
 (global-set-key (kbd "C-c p") #'project-find-file)
 (global-set-key (kbd "C-c m") #'execute-extended-command)
 (global-set-key (kbd "C-c o") #'find-file)
+(global-set-key (kbd "C-c h") #'my/terminal-ssh-connect)
 (global-set-key (kbd "C-c t") #'my/terminal-menu)
 (global-set-key (kbd "C-c u") #'vundo)
 (global-set-key (kbd "C-c [") #'tab-previous)
