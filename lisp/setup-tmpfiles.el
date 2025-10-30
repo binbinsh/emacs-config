@@ -7,6 +7,27 @@
     (file-name-as-directory (expand-file-name "emacs" xdg-cache)))
   "Directory where Emacs writes cached and temporary files.")
 
+;; IMPORTANT: Early init timing
+;; The following must be kept at the very top of this file and this file
+;; must be required from early-init.el. They need to run as early as possible,
+;; before any package initialization and before any native compilation happens:
+
+;; Write package quickstart under XDG cache (~/.cache/emacs/)
+(let ((cache-dir my-emacs-cache-directory))
+  (setq package-quickstart-file (expand-file-name "package-quickstart.el" cache-dir))
+  (make-directory cache-dir t))
+(setq package-quickstart t)
+
+;; Redirect native-comp eln cache under XDG cache (~/.cache/emacs/eln-cache)
+(let ((eln-cache (file-name-as-directory (expand-file-name "eln-cache" my-emacs-cache-directory))))
+  (when (and (fboundp 'native-comp-available-p)
+             (native-comp-available-p)
+             (fboundp 'startup-redirect-eln-cache))
+    (startup-redirect-eln-cache eln-cache)))
+
+;; ============================================================
+
+
 ;; Dirvish cache directory under XDG cache (~/.cache/emacs/dirvish)
 (setq dirvish-cache-dir (expand-file-name "dirvish" my-emacs-cache-directory))
 
