@@ -71,6 +71,10 @@
 (setq url-history-file
       (expand-file-name "url/history" my-emacs-cache-directory))
 
+;; project.el known projects list file
+(setq project-list-file
+      (expand-file-name "projects" my-emacs-cache-directory))
+
 (setq transient-history-file
       (expand-file-name "transient/history.el" my-emacs-cache-directory))
 (setq transient-levels-file
