@@ -50,6 +50,9 @@
 ;; Markdown (auto-preview + right-side split)
 (require 'setup-markdown)
 
+;; Snippets (load before keys to provide commands)
+(require 'setup-snippets)
+
 ;; Context-aware Command leader keys
 (require 'setup-keys)
 

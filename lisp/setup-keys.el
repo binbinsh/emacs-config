@@ -43,7 +43,8 @@
 (global-set-key (kbd "C-c e") #'my/toggle-explorer)
 (global-set-key (kbd "C-c v") #'my/toggle-vterm)
 (global-set-key (kbd "C-c g") #'fork-git-open-status)
-(global-set-key (kbd "C-c s") #'consult-ripgrep)
+(global-set-key (kbd "C-c s") #'my/snippet-select-smart)
+(global-set-key (kbd "C-c /") #'consult-ripgrep)
 (global-set-key (kbd "C-c b") #'consult-buffer)
 (global-set-key (kbd "C-c p") #'project-find-file)
 (global-set-key (kbd "C-c m") #'execute-extended-command)
@@ -75,6 +76,7 @@
 ;; vterm: C-c inside terminal buffers
 (with-eval-after-load 'vterm
   (let ((map vterm-mode-map))
+    (define-key map (kbd "C-c s") #'my/snippet-select-smart)
     (define-key map (kbd "C-c o") #'my/terminal-open)
     (define-key map (kbd "C-c h") #'my/terminal-ssh-connect)
     (define-key map (kbd "C-c l") #'my/terminal-remote-dired)

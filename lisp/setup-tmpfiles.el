@@ -22,7 +22,8 @@
                   "tramp"
                   "url"
                   "transient"
-                  "dirvish"))
+                  "dirvish"
+                  "svg-lib"))
   (make-directory (expand-file-name subdir my-emacs-cache-directory) t))
 
 ;; Temporary files
@@ -80,5 +81,10 @@
 ;; lsp-mode and dap-mode state files in cache dir
 (setq lsp-session-file (expand-file-name ".lsp-session-v1" my-emacs-cache-directory))
 (setq dap-breakpoints-file (expand-file-name ".dap-breakpoints" my-emacs-cache-directory))
+
+;; svg-lib cache under XDG cache (~/.cache/emacs/svg-lib)
+(let ((new-svg-cache (expand-file-name "svg-lib/" my-emacs-cache-directory)))
+  (setq svg-lib-cache-directory new-svg-cache)
+  (make-directory new-svg-cache t))
 
 (provide 'setup-tmpfiles)

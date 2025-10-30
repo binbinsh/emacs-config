@@ -14,6 +14,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - **Git**: Magit workflow, inline blame overlays, delta‑enhanced diffs, optional AI commit messages.
 - **Python**: LSP (pyright), Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugging via `dap-mode`/debugpy.
 - **Markdown**: Auto live preview in a right split (xwidget‑webkit or EWW).
+- **Snippets**: Yasnippet with Consult‑powered searchable selection (`C-c s`), global activation, personal snippets in `~/.config/emacs/snippets/` (outside this repo).
 - **Clipboard & perf**: `simpleclip` clipboard integration; smoother GC via `gcmh`.
 
 ### Keys
