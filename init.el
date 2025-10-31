@@ -47,6 +47,9 @@
 (require 'setup-python)
 (require 'setup-git)
 
+;; Gmail/Notmuch + LM Studio integration
+(require 'setup-gmail nil t)
+
 ;; Markdown (auto-preview + right-side split)
 (require 'setup-markdown)
 

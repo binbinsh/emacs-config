@@ -32,7 +32,8 @@
     (when (display-graphic-p)
       (let* ((default-size 15)
              (english (or (my/find-first-font
-                           '("JetBrainsMono NF" "JetBrains Mono" "Fira Code" "Hack" "DejaVu Sans Mono"
+                           '("JetBrainsMono Nerd Font Mono" "JetBrainsMono Nerd Font" "JetBrainsMono NF"
+                             "JetBrains Mono" "Fira Code" "Hack" "DejaVu Sans Mono"
                              "SF Mono" "Menlo" "Monaco"))
                           "Monaco"))
              (cjk (or (my/find-first-font
@@ -44,7 +45,9 @@
         (dolist (charset '(han kana cjk-misc bopomofo))
           (set-fontset-font t charset (font-spec :name cjk)))
         (when emoji
-          (set-fontset-font t 'symbol (font-spec :name emoji) nil 'prepend))))))
+          (set-fontset-font t 'symbol (font-spec :name emoji) nil 'prepend))
+        ;; Force nerd-icons to use the same mono font
+        (setq nerd-icons-font-family english)))))
 
 (add-hook 'emacs-startup-hook #'my/apply-fonts)
 (add-hook 'after-make-frame-functions #'my/apply-fonts)
@@ -52,6 +55,7 @@
 ;; Modeline (status bar)
 (use-package doom-modeline
   :init
+  (setq doom-modeline-icon t)
   (setq doom-modeline-height 26)
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
   :config

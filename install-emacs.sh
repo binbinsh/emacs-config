@@ -32,11 +32,40 @@ install_macos() {
     [ -d "/usr/local/bin" ] && ensure_path "/usr/local/bin"
   fi
 
-  brew install emacs-app
+  # Install Emacs with xwidgets (WebKit) via emacs-plus tap
+  brew tap d12frosted/emacs-plus >/dev/null 2>&1 || true
+  if ! brew list emacs-plus >/dev/null 2>&1; then
+    info "Installing emacs-plus with xwidgets"
+    brew install emacs-plus --with-xwidgets || warn "Failed to install emacs-plus with xwidgets"
+  else
+    info "emacs-plus already installed"
+  fi
+
+  # Symlink Emacs.app into /Applications for Spotlight/Launchpad
+  brew_prefix="$(brew --prefix)"
+  app_src="$brew_prefix/opt/emacs-plus/Emacs.app"
+  if [ ! -d "$app_src" ]; then
+    app_src="$(ls -d "$brew_prefix"/opt/emacs-plus@*/Emacs.app 2>/dev/null | head -n1 || true)"
+  fi
+  if [ -d "$app_src" ]; then
+    ln -sfn "$app_src" /Applications/Emacs.app || true
+  else
+    warn "Emacs.app not found under emacs-plus prefix; skip /Applications symlink"
+  fi
+
+  # Mail tooling
+  brew install notmuch || true
 
   # CLI deps
   brew install git ripgrep fd cmake pkg-config libtool git-delta || true
 
+  # Nerd Fonts (JetBrainsMono)
+  brew tap homebrew/cask-fonts >/dev/null 2>&1 || true
+  if ! brew list font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
+    brew install font-jetbrains-mono-nerd-font || warn "Failed to install JetBrainsMono Nerd Font via Homebrew"
+  fi
+
+  log "Nerd Font installation step completed"
   log "macOS base dependencies installed"
 }
 
@@ -48,8 +77,8 @@ install_ubuntu() {
   fi
   sudo apt update -y
   sudo apt install -y \
-    emacs git ripgrep fd-find cmake build-essential pkg-config libtool-bin \
-    libvterm-dev xclip curl fonts-noto fonts-noto-cjk fonts-noto-color-emoji
+    emacs notmuch libnotmuch-dev git ripgrep fd-find cmake build-essential pkg-config libtool-bin \
+    libvterm-dev xclip curl unzip fontconfig fonts-noto fonts-noto-cjk fonts-noto-color-emoji
 
   # Provide `fd` alias if only fdfind exists
   if have fdfind && ! have fd; then
@@ -58,6 +87,21 @@ install_ubuntu() {
     ensure_path "$HOME/.local/bin"
   fi
 
+  # Nerd Fonts (JetBrainsMono)
+  dest="$HOME/.local/share/fonts/NerdFonts/JetBrainsMono"
+  mkdir -p "$dest"
+  if ! ls "$dest"/*.ttf >/dev/null 2>&1; then
+    tmp_dir="$(mktemp -d)"
+    if curl -fsSL -o "$tmp_dir/JetBrainsMono.zip" "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"; then
+      unzip -o "$tmp_dir/JetBrainsMono.zip" -d "$dest" >/dev/null 2>&1 || warn "Unzip JetBrainsMono Nerd Font failed"
+    else
+      warn "Download JetBrainsMono Nerd Font failed"
+    fi
+    rm -rf "$tmp_dir"
+  fi
+  fc-cache -f >/dev/null 2>&1 || true
+
+  log "Nerd Font installation step completed"
   log "Ubuntu base dependencies installed"
 }
 
@@ -68,6 +112,16 @@ install_uv() {
   fi
   ensure_path "$HOME/.local/bin"
   log "uv ready: $(uv --version || true)"
+}
+
+install_lieer() {
+  info "Installing lieer (gmi) via uv tool"
+  # Ensure uv exists and on PATH
+  install_uv
+  # Install or upgrade lieer (places entrypoints in ~/.local/bin)
+  uv tool install --upgrade lieer || uv tool install lieer
+  ensure_path "$HOME/.local/bin"
+  log "gmi ready: $(gmi -h || true)"
 }
 
 ensure_repo() {
@@ -96,13 +150,6 @@ setup_python() {
   log "Python tooling installed"
 }
 
-prewarm_fonts() {
-  info "Installing all-the-icons fonts (non-interactive)"
-  emacs -Q --batch --eval \
-    '(progn (require (quote package)) (package-initialize) (unless (package-installed-p (quote all-the-icons)) (package-refresh-contents) (package-install (quote all-the-icons))) (require (quote all-the-icons)) (all-the-icons-install-fonts t))' \
-    || warn "Font installation encountered issues (you can rerun inside Emacs: M-x all-the-icons-install-fonts)"
-}
-
 main() {
   case "$OS" in
     Darwin) install_macos ;;
@@ -110,9 +157,9 @@ main() {
     *) err "Unsupported OS: $OS"; exit 1 ;;
   esac
   install_uv
+  install_lieer
   ensure_repo
   setup_python
-  prewarm_fonts
 
   cat <<'EOF'
 
