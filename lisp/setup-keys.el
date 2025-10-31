@@ -11,7 +11,7 @@
 ;; - b: switch buffer
 ;; - /: ripgrep
 ;; - s: snippet select
-;; - e: toggle explorer
+;; - e: focus explorer
 ;; - v: toggle vterm panel
 ;; - t: Remote Dired (TRAMP)
 ;; - g: Magit status
@@ -65,6 +65,7 @@
 ;; Dired/Dirvish: C-c single keys inside file explorers
 (with-eval-after-load 'dired
   (let ((map dired-mode-map))
+    (define-key map (kbd "C-c e") #'my/focus-explorer)
     (define-key map (kbd "C-c o") #'dired-find-file)
     (define-key map (kbd "C-c c") #'dired-do-copy)
     (define-key map (kbd "C-c r") #'dired-do-rename)
@@ -73,6 +74,12 @@
     (define-key map (kbd "C-c p") #'tc/dired-toggle-preview)
     (define-key map (kbd "C-c )") #'dired-git-info-mode)
     (define-key map (kbd "C-c 2") #'tc/dired-two-panes)))
+
+;; Dirvish: ensure the same explorer toggle works inside Dirvish buffers
+(with-eval-after-load 'dirvish
+  (define-key dirvish-mode-map (kbd "C-c e") #'my/focus-explorer)
+  (when (boundp 'dirvish-directory-view-mode-map)
+    (define-key dirvish-directory-view-mode-map (kbd "C-c e") #'my/focus-explorer)))
 
 ;; vterm: C-c inside terminal buffers
 (with-eval-after-load 'vterm

@@ -310,10 +310,19 @@
         (my/dirvish-project-root)))))
 
 
+  (defun my/dirvish-side-window ()
+    "Return the Dirvish side window if visible, else nil."
+    (catch 'win
+      (dolist (w (window-list))
+        (with-current-buffer (window-buffer w)
+          (when (and (derived-mode-p 'dirvish-directory-view-mode)
+                     (eq (window-parameter w 'no-other-window) t))
+            (throw 'win w))))
+      nil))
+
   (defun my/focus-explorer ()
     (interactive)
-    (let* ((side (and (fboundp 'dirvish-side--session-visible-p)
-                      (dirvish-side--session-visible-p)))
+    (let* ((side (my/dirvish-side-window))
            (parent-left nil)
            (parent-left-x nil)
            (dired-left nil)
@@ -331,16 +340,11 @@
       (cond
         ((and (windowp side) (window-live-p side))
          (select-window side))
-        ((and (windowp parent-left) (window-live-p parent-left))
-         (select-window parent-left))
-        ((and (windowp dired-left) (window-live-p dired-left))
-         (select-window dired-left))
         (t
-         ;; Last resort: try to create a side and focus it
          (ignore-errors (my/dirvish-project-root))
-         (when-let ((w (and (fboundp 'dirvish-side--session-visible-p)
-                            (dirvish-side--session-visible-p))))
-           (select-window w))))))
+         (let ((w (or (my/dirvish-side-window) parent-left dired-left)))
+           (when (and (windowp w) (window-live-p w))
+             (select-window w)))))))
 
 
   ;; Keep explorer visible when creating/duplicating new tabs
