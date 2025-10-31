@@ -50,8 +50,9 @@
 (setq my/terminal-shell (or (getenv "SHELL") (if (eq system-type 'darwin) "/bin/zsh" "/bin/bash")))
 
 ;; Local LM Studio API settings for AI command suggestions
-(setq my/terminal-lmstudio-base-url "http://localhost:1234/v1")
-(setq my/terminal-lmstudio-model "gpt-oss-20b")
+(setq my/lmstudio-base-url "http://localhost:1234/v1")
+(setq my/lmstudio-model "gpt-oss-20b")
+(setq my/lmstudio-timeout 6)
 
 (provide 'setup-profile)
 

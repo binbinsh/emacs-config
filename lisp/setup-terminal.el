@@ -291,20 +291,6 @@ The structure is intentionally flexible and editable via customize."
 (require 'json)
 (require 'url)
 
-(defcustom my/terminal-lmstudio-base-url "http://localhost:1234/v1"
-  "Base URL for LM Studio's OpenAI-compatible API."
-  :type 'string
-  :group 'my-terminal)
-
-(defcustom my/terminal-lmstudio-model "lm-studio"
-  "Model name served by LM Studio (e.g., 'Qwen2.5-Coder-32B-Instruct')."
-  :type 'string
-  :group 'my-terminal)
-
-(defcustom my/terminal-lmstudio-timeout 6
-  "Timeout in seconds for LM Studio suggestions."
-  :type 'integer
-  :group 'my-terminal)
 
 (defun my/terminal--strip-code-fences (text)
   (let ((s text))
@@ -317,16 +303,16 @@ The structure is intentionally flexible and editable via customize."
   (let* ((url-request-method "POST")
          (url-request-extra-headers '(("Content-Type" . "application/json")))
          (payload (json-encode
-                   `((model . ,my/terminal-lmstudio-model)
+                   `((model . ,my/lmstudio-model)
                      (temperature . 0.2)
                      (max_tokens . 128)
                      (messages . [((role . "system") (content . "You are a CLI assistant. Output only one concise shell command without explanations."))
                                   ((role . "user") (content . ,prompt))]))))
          (url-request-data payload)
-         (endpoint (concat (string-remove-suffix "/" my/terminal-lmstudio-base-url) "/chat/completions"))
+         (endpoint (concat (string-remove-suffix "/" my/lmstudio-base-url) "/chat/completions"))
          (url-show-status nil)
-         (url-request-timeout my/terminal-lmstudio-timeout)
-         (buf (url-retrieve-synchronously endpoint t t my/terminal-lmstudio-timeout)))
+         (url-request-timeout my/lmstudio-timeout)
+         (buf (url-retrieve-synchronously endpoint t t my/lmstudio-timeout)))
     (when buf
       (with-current-buffer buf
         (goto-char (point-min))
