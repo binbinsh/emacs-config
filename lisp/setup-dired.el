@@ -9,13 +9,11 @@
   :config
   (dirvish-override-dired-mode)
   ;; Attributes shown in header/columns
-  (setq dirvish-attributes '(all-the-icons file-size file-time git-msg)))
+  (setq dirvish-attributes '(vscode-icon file-size file-time git-msg)))
 
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
 
-(use-package all-the-icons-dired
-  :hook (dired-mode . (lambda () (when (display-graphic-p) (all-the-icons-dired-mode 1)))))
 
 (use-package dired-git-info :after dired)
 (use-package peep-dired :after dired)
@@ -34,8 +32,6 @@
   (hl-line-mode 1)))
 
 ;; Colorful Dired faces are enabled via use-package diredfl above
-
-;; Icons in Dired are enabled via use-package all-the-icons-dired above
 
 ;; Git info inline toggle key
 (with-eval-after-load 'dired

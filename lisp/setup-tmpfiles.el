@@ -107,9 +107,9 @@
 (setq lsp-session-file (expand-file-name ".lsp-session-v1" my-emacs-cache-directory))
 (setq dap-breakpoints-file (expand-file-name ".dap-breakpoints" my-emacs-cache-directory))
 
-;; svg-lib cache under XDG cache (~/.cache/emacs/svg-lib)
+;; svg-lib icons dir under XDG cache (~/.cache/emacs/svg-lib)
 (let ((new-svg-cache (expand-file-name "svg-lib/" my-emacs-cache-directory)))
-  (setq svg-lib-cache-directory new-svg-cache)
+  (setq svg-lib-icons-dir new-svg-cache)
   (make-directory new-svg-cache t))
 
 (provide 'setup-tmpfiles)

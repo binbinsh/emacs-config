@@ -268,12 +268,14 @@
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 ;; Explorer sidebar (Dirvish side) with icons
-(use-package all-the-icons :if (display-graphic-p))
+(use-package vscode-icon)
 (use-package dirvish
-  :after (all-the-icons project)
+  :after project
   :config
   (dirvish-override-dired-mode)
-  (setq dirvish-attributes '(all-the-icons file-size file-time git-msg)))
+  (setq dirvish-attributes '(vscode-icon file-size file-time git-msg))
+  ;; Ensure side session uses the same icon attributes
+  (setq dirvish-side-attributes '(vscode-icon file-size file-time git-msg)))
 
 (use-package dirvish-side
   :ensure nil
@@ -287,7 +289,13 @@
     "Open dirvish at project root or current directory."
     (let* ((project (ignore-errors (project-current)))
            (root (if project (project-root project) default-directory)))
-      (dirvish-side root)))
+      ;; If current buffer is a fullframe Dirvish session, create side from a
+      ;; temporary non-Dirvish buffer to avoid the "Can not create side session here" guard.
+      (let ((blocked (and (fboundp 'dirvish-curr)
+                          (when-let ((dv (dirvish-curr))) (dv-curr-layout dv)))))
+        (if blocked
+            (with-temp-buffer (dirvish-side root))
+          (dirvish-side root)))))
   (defun my/toggle-explorer ()
     "Toggle explorer like Cursor's sidebar (Dirvish side)."
     (interactive)
@@ -296,6 +304,39 @@
       (if (and (windowp w) (window-live-p w))
           (with-selected-window w (dirvish-quit))
         (my/dirvish-project-root)))))
+
+
+  (defun my/focus-explorer ()
+    (interactive)
+    (let* ((side (and (fboundp 'dirvish-side--session-visible-p)
+                      (dirvish-side--session-visible-p)))
+           (parent-left nil)
+           (parent-left-x nil)
+           (dired-left nil)
+           (dired-left-x nil))
+      (dolist (w (window-list))
+        (with-current-buffer (window-buffer w)
+          (let ((x (car (window-edges w))))
+            (cond
+              ((derived-mode-p 'dirvish-directory-view-mode)
+               (when (or (null parent-left-x) (< x parent-left-x))
+                 (setq parent-left-x x parent-left w)))
+              ((derived-mode-p 'dired-mode)
+               (when (or (null dired-left-x) (< x dired-left-x))
+                 (setq dired-left-x x dired-left w)))))))
+      (cond
+        ((and (windowp side) (window-live-p side))
+         (select-window side))
+        ((and (windowp parent-left) (window-live-p parent-left))
+         (select-window parent-left))
+        ((and (windowp dired-left) (window-live-p dired-left))
+         (select-window dired-left))
+        (t
+         ;; Last resort: try to create a side and focus it
+         (ignore-errors (my/dirvish-project-root))
+         (when-let ((w (and (fboundp 'dirvish-side--session-visible-p)
+                            (dirvish-side--session-visible-p))))
+           (select-window w))))))
 
 
   ;; Keep explorer visible when creating/duplicating new tabs

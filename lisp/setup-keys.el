@@ -40,7 +40,7 @@
 ;; Global Command leader map
 ;; No leader; use C-c everywhere
 ;; Direct shortcuts under C-c (user-reserved prefix)
-(global-set-key (kbd "C-c e") #'my/toggle-explorer)
+(global-set-key (kbd "C-c e") #'my/focus-explorer)
 (global-set-key (kbd "C-c v") #'my/toggle-vterm)
 (global-set-key (kbd "C-c g") #'fork-git-open-status)
 (global-set-key (kbd "C-c s") #'my/snippet-select-smart)
