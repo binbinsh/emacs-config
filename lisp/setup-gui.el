@@ -272,14 +272,17 @@
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 ;; Explorer sidebar (Dirvish side) with icons
-(use-package vscode-icon)
+(use-package vscode-icon
+  :if (display-graphic-p))
+
 (use-package dirvish
   :after project
   :config
   (dirvish-override-dired-mode)
-  (setq dirvish-attributes '(vscode-icon file-size file-time git-msg))
-  ;; Ensure side session uses the same icon attributes
-  (setq dirvish-side-attributes '(vscode-icon file-size file-time git-msg)))
+  ;; Only force vscode-icon in GUI; in TTY we fallback in setup-dired.el
+  (when (display-graphic-p)
+    (setq dirvish-attributes '(vscode-icon file-size file-time git-msg)
+          dirvish-side-attributes '(vscode-icon file-size file-time git-msg))) )
 
 (use-package dirvish-side
   :ensure nil

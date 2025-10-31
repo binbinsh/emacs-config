@@ -6,10 +6,14 @@
 
 ;; Packages for modern Dired UX
 (use-package dirvish
+  :init
+  ;; Ensure nerd-icons is available for TTY sessions (safe if missing)
+  (require 'nerd-icons nil t)
   :config
   (dirvish-override-dired-mode)
-  ;; Attributes shown in header/columns
-  (setq dirvish-attributes '(vscode-icon file-size file-time git-msg)))
+  ;; Use vscode-icon in GUI; fallback to nerd-icons in terminal
+  (setq dirvish-attributes (list (if (display-graphic-p) 'vscode-icon 'nerd-icons)
+                                 'file-size 'file-time 'git-msg)))
 
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
