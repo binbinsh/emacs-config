@@ -49,6 +49,10 @@
 ;; Shell used by vterm
 (setq my/terminal-shell (or (getenv "SHELL") (if (eq system-type 'darwin) "/bin/zsh" "/bin/bash")))
 
+;; ----------------------------------------------------------------------------
+;; LM Studio related settings
+;; ----------------------------------------------------------------------------
+
 ;; Local LM Studio API settings for AI command suggestions
 (setq my/lmstudio-base-url "http://localhost:1234/v1")
 (setq my/lmstudio-model "gpt-oss-20b")

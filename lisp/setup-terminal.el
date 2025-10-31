@@ -9,6 +9,7 @@
 (require 'subr-x) ;; string-join, string-trim, string-remove-suffix
 (require 'cl-lib)
 (use-package transient)
+(require 'setup-ai)
 
 (defgroup my-terminal nil
   "Termius-like terminal workflow and AI-assisted command suggestions."
@@ -285,49 +286,8 @@ The structure is intentionally flexible and editable via customize."
 ;; Keybindings are provided by the shared Command leader in setup-keys.el
 
 ;; ----------------------------------------------------------------------------
-;; LM Studio command suggestions (OpenAI-compatible local API)
+;; LM Studio command suggestions via setup-ai
 ;; ----------------------------------------------------------------------------
-
-(require 'json)
-(require 'url)
-
-
-(defun my/terminal--strip-code-fences (text)
-  (let ((s text))
-    (when (and (string-prefix-p "```" s) (string-suffix-p "```" s))
-      (setq s (string-trim s "```[a-zA-Z0-9_-]*\n" "```")))
-    (string-trim s)))
-
-(defun my/terminal--lmstudio-chat (prompt)
-  "Call LM Studio chat completions with PROMPT and return the message string, or nil."
-  (let* ((url-request-method "POST")
-         (url-request-extra-headers '(("Content-Type" . "application/json")))
-         (payload (json-encode
-                   `((model . ,my/lmstudio-model)
-                     (temperature . 0.2)
-                     (max_tokens . 128)
-                     (messages . [((role . "system") (content . "You are a CLI assistant. Output only one concise shell command without explanations."))
-                                  ((role . "user") (content . ,prompt))]))))
-         (url-request-data payload)
-         (endpoint (concat (string-remove-suffix "/" my/lmstudio-base-url) "/chat/completions"))
-         (url-show-status nil)
-         (url-request-timeout my/lmstudio-timeout)
-         (buf (url-retrieve-synchronously endpoint t t my/lmstudio-timeout)))
-    (when buf
-      (with-current-buffer buf
-        (goto-char (point-min))
-        (when (search-forward "\n\n" nil t)
-          (let* ((json-object-type 'alist)
-                 (json-array-type 'list)
-                 (json-key-type 'symbol)
-                 (resp (json-read))
-                 (choices (alist-get 'choices resp))
-                 (first (car choices))
-                 (message (alist-get 'message first))
-                 (content (alist-get 'content message)))
-            (kill-buffer buf)
-            (when (stringp content)
-              (my/terminal--strip-code-fences content))))))))
 
 (defun my/terminal--send-to-vterm-or-insert (text &optional run)
   (if (and (boundp 'vterm--process) vterm--process)
@@ -342,7 +302,7 @@ The structure is intentionally flexible and editable via customize."
   (interactive (list (if (use-region-p)
                          (buffer-substring-no-properties (region-beginning) (region-end))
                        (read-string "Describe the command: "))))
-  (let ((reply (my/terminal--lmstudio-chat prompt)))
+  (let ((reply (my/ai-suggest-shell prompt)))
     (if (not reply)
         (message "LM Studio not reachable or no content returned.")
       (my/terminal--send-to-vterm-or-insert reply nil))))
@@ -352,7 +312,7 @@ The structure is intentionally flexible and editable via customize."
   (interactive (list (if (use-region-p)
                          (buffer-substring-no-properties (region-beginning) (region-end))
                        (read-string "Describe the command to run: "))))
-  (let ((reply (my/terminal--lmstudio-chat prompt)))
+  (let ((reply (my/ai-suggest-shell prompt)))
     (if (not reply)
         (message "LM Studio not reachable or no content returned.")
       (my/terminal--send-to-vterm-or-insert reply t))))

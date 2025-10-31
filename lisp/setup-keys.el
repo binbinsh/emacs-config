@@ -88,7 +88,7 @@
     (define-key map (kbd "C-c o") #'my/terminal-open)
     (define-key map (kbd "C-c h") #'my/terminal-ssh-connect)
     (define-key map (kbd "C-c l") #'my/terminal-remote-dired)
-    (define-key map (kbd "C-c a") #'my/terminal-ai-suggest)
+    (define-key map (kbd "C-c c") #'my/terminal-ai-suggest)
     (define-key map (kbd "C-c r") #'my/terminal-tunnel-list)))
 
 ;; Magit: C-c inside Magit buffers
@@ -97,7 +97,7 @@
     (define-key map (kbd "C-c g") #'fork-git-open-status)
     (define-key map (kbd "C-c b") #'fork-git-branch-graph)
     (define-key map (kbd "C-c h") #'fork-git-file-history)
-    (define-key map (kbd "C-c a") #'fork-git-generate-commit-message)
+    (define-key map (kbd "C-c c") #'fork-git-generate-commit-message)
     (define-key map (kbd "C-c l") #'fork-git-blame-toggle)
     (define-key map (kbd "C-c d") #'fork-git-magit-delta-toggle)))
 
@@ -108,7 +108,7 @@
 ;; LSP: keep leader actions; also provide C-c helpers
 (with-eval-after-load 'lsp-mode
   (define-key lsp-mode-map (kbd "C-c r") #'lsp-rename)
-  (define-key lsp-mode-map (kbd "C-c a") #'lsp-execute-code-action)
+  (define-key lsp-mode-map (kbd "C-c .") #'lsp-execute-code-action)
   (define-key lsp-mode-map (kbd "C-c f") #'lsp-format-buffer)
   (define-key lsp-mode-map (kbd "C-c i") #'lsp-organize-imports))
 
@@ -118,6 +118,20 @@
 
 ;; Minibuffer: convenience abort
 (define-key minibuffer-local-map (kbd "C-c m") #'abort-recursive-edit)
+
+;; Global AI override – ensure C-c a always triggers AI
+(defvar my/ai-override-map (make-sparse-keymap))
+(define-key my/ai-override-map (kbd "C-c a") #'my/ai-execute)
+
+(defvar my/ai--emulation-alist
+  `((my/ai-override-mode . ,my/ai-override-map)))
+
+(define-minor-mode my/ai-override-mode
+  "Override C-c a globally with AI assistant."
+  :global t)
+
+(add-to-list 'emulation-mode-map-alists 'my/ai--emulation-alist)
+(my/ai-override-mode 1)
 
 ;; Notmuch: Gmail-like bindings and AI helpers
 (with-eval-after-load 'notmuch

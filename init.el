@@ -59,6 +59,9 @@
 ;; Context-aware Command leader keys
 (require 'setup-keys)
 
+;; Global AI helpers
+(require 'setup-ai)
+
 ;; Clipboard
 (use-package simpleclip
   :init (simpleclip-mode 1))

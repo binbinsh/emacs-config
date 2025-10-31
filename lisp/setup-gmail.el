@@ -3,6 +3,7 @@
 (require 'use-package)
 (require 'json)
 (require 'url)
+(require 'setup-ai)
 (require 'nerd-icons nil t)
 (require 'xwidget nil t)
 (require 'cl-lib)
@@ -12,10 +13,6 @@
 (require 'url-util)
 (require 'markdown-mode nil t)
 
-;; Identities and LM Studio parameters should be defined in `lisp/setup-profile.el`:
-;; - my/notmuch-identities   : list of "Full Name <[email protected]>"
-;; - my/lmstudio-base-url    : string, e.g. "http://localhost:1234/v1"
-;; - my/lmstudio-model       : string, e.g. "gpt-oss-120b"
 
 ;; Sending mail via lieer (gmi) wrapper
 (setq message-send-mail-function 'message-send-mail-with-sendmail
@@ -316,58 +313,6 @@
         (my/notmuch--write-utf8-file tmp html)
         (xwidget-webkit-browse-url (concat "file://" tmp))))))
 
-;; LM Studio: minimal OpenAI-compatible chat/completions client
-(defun my/lmstudio--assert-config ()
-  (unless (and (boundp 'my/lmstudio-base-url) my/lmstudio-base-url
-               (boundp 'my/lmstudio-model) my/lmstudio-model)
-    (user-error "Set my/lmstudio-base-url and my/lmstudio-model in lisp/setup-profile.el")))
-
-(defun my/lmstudio-chat (messages &optional timeout)
-  "Send MESSAGES (alist list) to LM Studio and return assistant content string.
-Optional TIMEOUT (seconds) overrides `my/lmstudio-timeout'."
-  (my/lmstudio--assert-config)
-  (let* ((endpoint (concat (string-remove-suffix "/" my/lmstudio-base-url) "/chat/completions"))
-         (url-request-method "POST")
-         (url-request-extra-headers '(("Content-Type" . "application/json")
-                                      ("Accept" . "application/json")
-                                      ("Accept-Charset" . "utf-8")))
-         (url-request-timeout (or timeout my/lmstudio-timeout))
-         (url-show-status nil)
-         (url-request-data (json-encode `((model . ,my/lmstudio-model)
-                                          (messages . ,messages))))
-         (buf (url-retrieve-synchronously endpoint t t (or timeout my/lmstudio-timeout))))
-    (unless buf (user-error "LM Studio not reachable"))
-    (unwind-protect
-        (with-current-buffer buf
-          (goto-char (point-min))
-          (unless (search-forward "\n\n" nil t)
-            (when (boundp 'url-http-end-of-headers)
-              (goto-char url-http-end-of-headers)))
-          (let* ((status (and (boundp 'url-http-response-status) url-http-response-status)))
-            (when (and status (>= status 400))
-              (let* ((body (buffer-substring-no-properties (point) (point-max)))
-                     (excerpt (substring body 0 (min 200 (length body)))))
-                (user-error "LM Studio HTTP %s: %s" status (string-trim excerpt)))))
-          ;; Force UTF-8 decode of the JSON body regardless of headers
-          (ignore-errors (decode-coding-region (point) (point-max) 'utf-8))
-          (let* ((json-object-type 'alist)
-                 (json-array-type 'list)
-                 (json-key-type 'symbol)
-                 (resp (json-read))
-                 (choices (alist-get 'choices resp))
-                 (first (car choices))
-                 (message (alist-get 'message first))
-                 (content (alist-get 'content message)))
-            content))
-      (when (buffer-live-p buf) (kill-buffer buf)))))
-
-;; Echo-area status helper for LM Studio calls
-(defun my/lmstudio--with-echo-status (what thunk)
-  "Display WHAT progress in minibuffer while calling THUNK."
-  (let ((start (float-time)))
-    (message "LM Studio: %s..." what)
-    (prog1 (funcall thunk)
-      (message "LM Studio: %s...done (%.1fs)" what (- (float-time) start)))))
 
 (defun my/notmuch--current-message-id ()
   "Return the current message id at point from show/tree/search contexts.
@@ -537,23 +482,6 @@ Prefers the message shown in bottom-right notmuch-show; if unavailable, opens th
     (with-temp-file path
       (insert content))))
 
-;; Present Markdown content using markdown-mode when available; otherwise text-mode
-(defun my/notmuch--display-markdown (title markdown)
-  (let* ((tmp (make-temp-file "lm-summary-" nil ".md"))
-         (buf nil))
-    (my/notmuch--write-utf8-file tmp markdown)
-    (setq buf (find-file-noselect tmp))
-    (with-current-buffer buf
-      (goto-char (point-min))
-      (if (featurep 'markdown-mode)
-          (markdown-mode)
-        (text-mode))
-      (setq buffer-file-coding-system 'utf-8-unix)
-      (read-only-mode 1)
-      (rename-buffer (format "*LM %s*" title) t))
-    (pop-to-buffer buf)))
-
-
 (defun my/notmuch-ai-suggest-labels ()
   "Ask LM Studio to suggest JSON array of tags for the current message."
   (interactive)
@@ -578,9 +506,9 @@ Prefers the message shown in bottom-right notmuch-show; if unavailable, opens th
                   "If none apply, return [].\n"
                   "ALLOWED: " allowed-json "\n\n"
                   raw))
-         (content (my/lmstudio--with-echo-status
+         (content (my/ai-with-status
                    "suggesting labels"
-                   (lambda () (my/lmstudio-chat `(((role . "user") (content . ,prompt))) 15))))
+                   (lambda () (my/ai-chat `(((role . "user") (content . ,prompt))) 15))))
          (tags (condition-case nil
                    (json-read-from-string content)
                  (error (user-error "Model did not return valid JSON: %s" content)))))
@@ -612,9 +540,9 @@ Prefers the message shown in bottom-right notmuch-show; if unavailable, opens th
                   "Write a concise, polite reply email to the following message.\n"
                   "Return only the email body text.\n\n"
                   raw))
-         (content (my/lmstudio--with-echo-status
+         (content (my/ai-with-status
                    "generating reply"
-                   (lambda () (my/lmstudio-chat `(((role . "user") (content . ,prompt))) my/lmstudio-timeout)))))
+                   (lambda () (my/ai-chat `(((role . "user") (content . ,prompt))) my/lmstudio-timeout)))))
     (with-current-buffer (current-buffer)
       (when (derived-mode-p 'message-mode)
         (goto-char (point-max))
@@ -639,10 +567,10 @@ Prefers the message shown in bottom-right notmuch-show; if unavailable, opens th
          (prompt (if mid
                      (concat "Summarize the following email in English with concise bullet points and action items.\n\n" raw)
                    (concat "Summarize the email thread below with bullet points and action items in English.\n\n" raw)))
-         (content (my/lmstudio--with-echo-status
+         (content (my/ai-with-status
                    "summarizing thread"
-                   (lambda () (my/lmstudio-chat `(((role . "user") (content . ,prompt))) my/lmstudio-timeout)))))
-    (my/notmuch--display-markdown "Summary" content)))
+                   (lambda () (my/ai-chat `(((role . "user") (content . ,prompt))) my/lmstudio-timeout)))))
+    (my/ai-display-markdown "Summary" content)))
 
 (provide 'setup-gmail)
 
