@@ -17,9 +17,16 @@
       (set-frame-parameter frame 'fullscreen 'maximized))))
 
 ;; Clean chrome
-(when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(when (fboundp 'menu-bar-mode) (if (eq system-type 'darwin) (menu-bar-mode 1) (menu-bar-mode -1)))
 (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+
+;; Ensure subsequent GUI frames inherit the same chrome policy
+(if (eq system-type 'darwin)
+    (add-to-list 'default-frame-alist '(menu-bar-lines . 1))
+  (add-to-list 'default-frame-alist '(menu-bar-lines . 0)))
+(add-to-list 'default-frame-alist '(tool-bar-lines . 0))
+(add-to-list 'default-frame-alist '(vertical-scroll-bars . nil))
 
 ;; Fonts (optimize English + Chinese)
 (require 'cl-lib)
