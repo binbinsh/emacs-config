@@ -46,12 +46,10 @@
 (require 'setup-dired)
 (require 'setup-python)
 (require 'setup-git)
+(require 'setup-markdown)
 
 ;; Gmail/Notmuch + LM Studio integration
 (require 'setup-gmail nil t)
-
-;; Markdown (auto-preview + right-side split)
-(require 'setup-markdown)
 
 ;; Snippets (load before keys to provide commands)
 (require 'setup-snippets)
@@ -61,6 +59,9 @@
 
 ;; Global AI helpers
 (require 'setup-ai)
+
+;; Large files & long lines (VLF + so-long)
+(require 'setup-large-files)
 
 ;; Clipboard
 (use-package simpleclip

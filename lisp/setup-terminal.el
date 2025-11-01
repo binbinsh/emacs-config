@@ -29,7 +29,8 @@
         "-o ControlMaster=auto -o ControlPath=~/.ssh/tramp.%%C -o ControlPersist=yes"
         remote-file-name-inhibit-cache nil
         tramp-completion-reread-directory-timeout 600
-        tramp-verbose 1)
+        tramp-verbose 1
+        tramp-chunksize 65536)
   (when (boundp 'vc-ignore-dir-regexp)
     (setq vc-ignore-dir-regexp
           (format "\\(%s\\)\\|\\(%s\\)" vc-ignore-dir-regexp tramp-file-name-regexp))))
