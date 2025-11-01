@@ -52,7 +52,19 @@ Falls back to the default EWW window function when xwidget is unavailable."
       (markdown-live-preview-mode 1)))
 
   (add-hook 'markdown-mode-hook #'my/markdown-auto-preview)
-  (add-hook 'gfm-mode-hook #'my/markdown-auto-preview))
+  (add-hook 'gfm-mode-hook #'my/markdown-auto-preview)
+
+  ;; Ensure the preview buffer is displayed if it exists but is not visible
+  (defun my/markdown-ensure-preview-visible ()
+    (when (and (derived-mode-p 'markdown-mode)
+               markdown-live-preview-mode
+               (buffer-live-p markdown-live-preview-buffer)
+               (null (get-buffer-window-list markdown-live-preview-buffer t t)))
+      (markdown-display-buffer-other-window markdown-live-preview-buffer)))
+
+  ;; Run after markdown updates preview on save
+  (add-hook 'markdown-mode-hook
+            (lambda () (add-hook 'after-save-hook #'my/markdown-ensure-preview-visible t t))))
 
 (defun my/display-xwidget-right (buffer _action)
   (with-current-buffer buffer (derived-mode-p 'xwidget-webkit-mode)))
