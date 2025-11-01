@@ -13,6 +13,11 @@
 ;; Auto-open with VLF without prompting; show only a non-blocking message
 (setq vlf-application 'dont-ask)
 
+;; Global VLF batch defaults (affect first chunk)
+(with-eval-after-load 'vlf
+  (setq vlf-batch-size        (* 2 1024 1024)  ; 2MB for local
+        vlf-batch-size-remote (* 32 1024))) ; 32KB for remote TRAMP
+
 (defcustom my/large-file-vlf-threshold (* 64 1024 1024)
   "Open files >= this many bytes via VLF."
   :type 'integer
@@ -51,13 +56,6 @@
   (setq-local jit-lock-defer-time 0.25
               redisplay-skip-fontification-on-input t
               fast-but-imprecise-scrolling t)
-
-  ;; Adaptive VLF batch size (local vs remote)
-  (when (boundp 'vlf-batch-size)
-    (setq-local vlf-batch-size
-                (if (file-remote-p (or (buffer-file-name) default-directory))
-                    (* 2 1024 1024)   ; 2MB for remote TRAMP
-                    (* 16 1024 1024)))) ; 16MB for local SSD/HDD
 
   ;; Reduce IO and memory footprint for huge buffers
   (setq-local make-backup-files nil
