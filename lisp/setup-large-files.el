@@ -12,13 +12,14 @@
 
 ;; Auto-open with VLF without prompting; show only a non-blocking message
 (setq vlf-application 'dont-ask)
-;; Avoid Emacs' own large-file yes/no prompt; VLF handles huge files safely
-(setq large-file-warning-threshold nil)
 
 (defcustom my/large-file-vlf-threshold (* 64 1024 1024)
   "Open files >= this many bytes via VLF."
   :type 'integer
   :group 'files)
+
+;; Let VLF intercept based on the same threshold
+(setq large-file-warning-threshold my/large-file-vlf-threshold)
 
 (defun my/large-file--maybe-vlf ()
   "Reopen current file with VLF if it exceeds `my/large-file-vlf-threshold'."
@@ -68,24 +69,27 @@
 (add-hook 'so-long-mode-hook #'my/large-file-setup)
 
 ;; Informative, non-blocking notice when VLF activates
-(add-hook 'vlf-mode-hook
-          (lambda ()
-            (message "Large file: opened with VLF. C-c w soft-wrap; M-x vlf-set-batch-size to tune.")))
+(defun my/large-file--announce ()
+  (run-at-time 0.2 nil
+               (lambda ()
+                 (message "Large file (VLF): batch=%s, %s. C-c w soft-wrap; M-x vlf-set-batch-size to tune."
+                          (if (boundp 'vlf-batch-size) vlf-batch-size "?")
+                          (if (file-remote-p (or (buffer-file-name) default-directory)) "remote" "local")))))
+
+(add-hook 'vlf-mode-hook #'my/large-file--announce)
 
 (defun my/large-file-toggle-soft-wrap ()
   "Toggle soft wrap (visual-line-mode) in large files on demand."
   (interactive)
   (visual-line-mode 'toggle))
 
-;; Keybindings in large-file contexts
-(with-eval-after-load 'vlf
-  (when (boundp 'vlf-mode-map)
-    (define-key vlf-mode-map (kbd "C-c w") #'my/large-file-toggle-soft-wrap)))
+(add-hook 'vlf-mode-hook
+          (lambda ()
+            (local-set-key (kbd "C-c w") #'my/large-file-toggle-soft-wrap)))
 
-(with-eval-after-load 'so-long
-  (when (boundp 'so-long-mode-map)
-    (define-key so-long-mode-map (kbd "C-c w") #'my/large-file-toggle-soft-wrap)))
+(add-hook 'so-long-mode-hook
+          (lambda ()
+            (local-set-key (kbd "C-c w") #'my/large-file-toggle-soft-wrap)))
 
 (provide 'setup-large-files)
-
 
