@@ -280,7 +280,7 @@
   ;; Only force vscode-icon in GUI; in TTY we fallback in setup-dired.el
   (when (display-graphic-p)
     (setq dirvish-attributes '(vscode-icon file-size file-time git-msg)
-          dirvish-side-attributes '(vscode-icon file-size file-time git-msg))) )
+          dirvish-side-attributes '(vscode-icon file-time))) )
 
 (use-package dirvish-side
   :ensure nil
