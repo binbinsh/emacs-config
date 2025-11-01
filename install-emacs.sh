@@ -65,6 +65,11 @@ install_macos() {
     brew install font-jetbrains-mono-nerd-font || warn "Failed to install JetBrainsMono Nerd Font via Homebrew"
   fi
 
+  # Nerd Fonts Symbols Only (provides "Symbols Nerd Font Mono" for icons)
+  if ! brew list font-symbols-only-nerd-font >/dev/null 2>&1; then
+    brew install font-symbols-only-nerd-font || warn "Failed to install Symbols Nerd Font via Homebrew"
+  fi
+
   log "Nerd Font installation step completed"
   log "macOS base dependencies installed"
 }
@@ -96,6 +101,20 @@ install_ubuntu() {
       unzip -o "$tmp_dir/JetBrainsMono.zip" -d "$dest" >/dev/null 2>&1 || warn "Unzip JetBrainsMono Nerd Font failed"
     else
       warn "Download JetBrainsMono Nerd Font failed"
+    fi
+    rm -rf "$tmp_dir"
+  fi
+  fc-cache -f >/dev/null 2>&1 || true
+
+  # Nerd Fonts Symbols Only (provides "Symbols Nerd Font Mono" for icons)
+  dest_sym="$HOME/.local/share/fonts/NerdFonts/SymbolsOnly"
+  mkdir -p "$dest_sym"
+  if ! ls "$dest_sym"/*.ttf >/dev/null 2>&1; then
+    tmp_dir="$(mktemp -d)"
+    if curl -fsSL -o "$tmp_dir/NerdFontsSymbolsOnly.zip" "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip"; then
+      unzip -o "$tmp_dir/NerdFontsSymbolsOnly.zip" -d "$dest_sym" >/dev/null 2>&1 || warn "Unzip Nerd Fonts Symbols Only failed"
+    else
+      warn "Download Nerd Fonts Symbols Only failed"
     fi
     rm -rf "$tmp_dir"
   fi

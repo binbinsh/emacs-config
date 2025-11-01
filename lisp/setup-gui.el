@@ -46,8 +46,7 @@
           (set-fontset-font t charset (font-spec :name cjk)))
         (when emoji
           (set-fontset-font t 'symbol (font-spec :name emoji) nil 'prepend))
-        ;; Force nerd-icons to use the same mono font
-        (setq nerd-icons-font-family english)))))
+        (setq nerd-icons-font-family "Symbols Nerd Font Mono")))))
 
 (add-hook 'emacs-startup-hook #'my/apply-fonts)
 (add-hook 'after-make-frame-functions #'my/apply-fonts)
