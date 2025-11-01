@@ -35,8 +35,8 @@ install_macos() {
   # Install Emacs with xwidgets (WebKit) via emacs-plus tap
   brew tap d12frosted/emacs-plus >/dev/null 2>&1 || true
   if ! brew list emacs-plus >/dev/null 2>&1; then
-    info "Installing emacs-plus with xwidgets"
-    brew install emacs-plus --with-xwidgets || warn "Failed to install emacs-plus with xwidgets"
+    info "Installing emacs-plus with xwidgets and custom icon"
+    brew install emacs-plus --with-xwidgets --with-savchenkovaleriy-big-sur-3d-icon || warn "Failed to install emacs-plus with xwidgets and icon"
   else
     info "emacs-plus already installed"
   fi
