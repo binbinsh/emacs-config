@@ -12,6 +12,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - **Completion & search**: Vertico, Orderless, Marginalia, Consult (+ LSP), Embark, Corfu + Cape + popup info, kind‑icon.
 - **Explorer & files**: Dirvish sidebar and enhanced Dired (icons, git info, quick preview, two‑pane), `diff-hl` fringe highlights.
 - **Large files**: 64MB+ open via VLF chunks; toggle soft wrap with `C-c w`; highlighting optional.
+- **Language support**: 20+ languages with Tree-sitter syntax, LSP hooks, and smart navigation (`C-c j` for symbols, `M-.` for definitions, ripgrep fallback).
 - **Terminal**: Integrated vterm panel toggle; terminal hub (SSH, remote Dired via TRAMP, tunnels); optional AI command suggestions via LM Studio.
 - **Git**: Magit workflow, inline blame overlays, delta‑enhanced diffs, optional AI commit messages.
 - **Python**: LSP (pyright), Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugging via `dap-mode`/debugpy.

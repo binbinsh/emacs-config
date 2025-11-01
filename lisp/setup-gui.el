@@ -207,21 +207,13 @@
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
   (add-hook 'completion-at-point-functions #'cape-keyword))
 
-;; Floating minibuffer in GUI
-(use-package mini-frame
+;; Floating completion UI in GUI (posframe for Vertico/Consult)
+(use-package vertico-posframe
   :if (display-graphic-p)
-  :init
-  (setq mini-frame-resize t
-        mini-frame-create-lazy t
-        mini-frame-show-parameters '((top . 0.18)
-                                     (left . 0.5)
-                                     (width . 0.6)
-                                     (height . 15)
-                                     (internal-border-width . 12)
-                                     (undecorated . t)
-                                     (child-frame-border-width . 1)))
+  :after vertico
   :config
-  (mini-frame-mode 1))
+  (setq vertico-posframe-width 120)
+  (vertico-posframe-mode 1))
 
 ;; Helpful: better help buffers
 (use-package helpful

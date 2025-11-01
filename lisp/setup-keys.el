@@ -60,6 +60,9 @@
 (global-set-key (kbd "C-c y") #'fork-git-show-inline-commit)
 (global-set-key (kbd "C-c l") #'fork-git-inline-blame-toggle)
 
+;; Symbols: fast function/class navigation
+(global-set-key (kbd "C-c j") #'consult-imenu)
+
 ;; No leader defaults
 
 ;; Dired/Dirvish: C-c single keys inside file explorers

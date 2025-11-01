@@ -48,6 +48,11 @@
 (require 'setup-git)
 (require 'setup-markdown)
 
+;; Languages: Tree-sitter, LSP hooks, and navigation helpers
+(require 'setup-treesit)
+(require 'setup-langs)
+(require 'setup-code-nav)
+
 ;; Gmail/Notmuch + LM Studio integration
 (require 'setup-gmail nil t)
 
