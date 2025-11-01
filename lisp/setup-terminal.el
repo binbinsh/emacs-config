@@ -22,6 +22,7 @@
 ;; - Enable SSH multiplexing (ControlMaster/ControlPersist)
 ;; - Cache remote completions to reduce repeated stat calls
 ;; - Disable VC on remote paths to avoid expensive VCS probes over TRAMP
+(setq tramp-default-method "ssh")
 (with-eval-after-load 'tramp
   (setq tramp-use-ssh-controlmaster-options t
         tramp-ssh-controlmaster-options

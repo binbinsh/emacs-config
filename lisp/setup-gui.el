@@ -289,7 +289,7 @@
   :after dirvish
   :init
   (setq dirvish-side-display-alist '((side . left) (slot . -1))
-        dirvish-side-width 48
+        dirvish-side-width 60
         dirvish-side-window-parameters '((no-delete-other-windows . t)
                                          (no-other-window . t)))
   (defun my/dirvish-project-root ()
