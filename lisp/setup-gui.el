@@ -380,4 +380,21 @@
 
 ;; Keybindings moved to the unified Command leader (see setup-keys.el)
 
+;; Code navigation and syntax helpers
+(which-function-mode 1)
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+(use-package dumb-jump
+  :init
+  (setq dumb-jump-prefer-searcher 'rg)
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+
+(use-package imenu-list
+  :commands (imenu-list-smart-toggle))
+
+(setq imenu-auto-rescan t
+      imenu-use-popup-menu nil)
+
 (provide 'setup-gui)
