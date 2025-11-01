@@ -44,8 +44,15 @@
                   "url"
                   "transient"
                   "dirvish"
-                  "svg-lib"))
+                  "svg-lib"
+                  "lsp"))
   (make-directory (expand-file-name subdir my-emacs-cache-directory) t))
+
+;; Redirect URL (eww) cache/config under XDG cache
+(setq url-configuration-directory
+      (expand-file-name "url/" my-emacs-cache-directory))
+(setq url-cache-directory
+      (expand-file-name "url/cache" my-emacs-cache-directory))
 
 ;; Temporary files
 (setq temporary-file-directory
@@ -106,6 +113,9 @@
 ;; lsp-mode and dap-mode state files in cache dir
 (setq lsp-session-file (expand-file-name ".lsp-session-v1" my-emacs-cache-directory))
 (setq dap-breakpoints-file (expand-file-name ".dap-breakpoints" my-emacs-cache-directory))
+
+;; Place lsp-mode server installs under XDG cache (~/.cache/emacs/lsp)
+(setq lsp-server-install-dir (expand-file-name "lsp/" my-emacs-cache-directory))
 
 ;; svg-lib icons dir under XDG cache (~/.cache/emacs/svg-lib)
 (let ((new-svg-cache (expand-file-name "svg-lib/" my-emacs-cache-directory)))
