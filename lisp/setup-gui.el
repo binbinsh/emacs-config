@@ -1,20 +1,20 @@
 ;; Core GUI baseline (Cursor-like)
 (setq inhibit-startup-screen t)
 
-;; Theme (light)
-(use-package modus-themes
-  :init (load-theme 'modus-operandi t))
+;; Theme (Catppuccin Latte - light)
+(use-package catppuccin-theme
+  :init
+  (setq catppuccin-flavor 'latte)
+  :config
+  (load-theme 'catppuccin t))
 
 ;; Frame behavior and size
 (setq frame-resize-pixelwise t)
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-;; Ensure new GUI frames (e.g., emacsclient) start maximized
-(add-hook 'after-make-frame-functions
-  (lambda (frame)
-    (when (display-graphic-p frame)
-      (set-frame-parameter frame 'fullscreen 'maximized))))
+;; Larger default window size (without forcing fullscreen)
+(add-to-list 'initial-frame-alist '(width . 180))
+(add-to-list 'initial-frame-alist '(height . 60))
+(add-to-list 'default-frame-alist '(width . 180))
+(add-to-list 'default-frame-alist '(height . 60))
 
 ;; Clean chrome
 (when (fboundp 'menu-bar-mode) (if (eq system-type 'darwin) (menu-bar-mode 1) (menu-bar-mode -1)))
