@@ -281,6 +281,14 @@
   (define-key vundo-mode-map (kbd "j") #'vundo-next)
   (define-key vundo-mode-map (kbd "k") #'vundo-previous))
 
+;; Soft wrap toggle (global)
+(defun my/toggle-soft-wrap-global ()
+  "Toggle soft wrapping across all buffers using global-visual-line-mode."
+  (interactive)
+  (if global-visual-line-mode
+      (global-visual-line-mode -1)
+    (global-visual-line-mode 1)))
+
 ;; Kind icons in Corfu margin
 (use-package kind-icon
   :after corfu

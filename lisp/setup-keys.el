@@ -40,6 +40,34 @@
 
 (require 'project)
 
+;; Smart navigation wrappers: prefer LSP if available, otherwise fall back
+(defun my/goto-definition-smart ()
+  "Go to definition via LSP when supported; otherwise use dumb-jump or xref."
+  (interactive)
+  (cond
+   ((and (bound-and-true-p lsp-mode)
+         (fboundp 'lsp-feature?)
+         (lsp-feature? :definition))
+    (call-interactively 'xref-find-definitions))
+   ((fboundp 'dumb-jump-go)
+    (call-interactively 'dumb-jump-go))
+   (t
+    (call-interactively 'xref-find-definitions))))
+
+(defun my/find-references-smart ()
+  "Find references via LSP when supported; otherwise search with ripgrep."
+  (interactive)
+  (cond
+   ((and (bound-and-true-p lsp-mode)
+         (fboundp 'lsp-feature?)
+         (lsp-feature? :references))
+    (call-interactively 'xref-find-references))
+   ((fboundp 'consult-ripgrep)
+    (let ((sym (or (thing-at-point 'symbol t) "")))
+      (consult-ripgrep nil sym)))
+   (t
+    (message "No references backend available; enable LSP or install consult."))))
+
 ;; Global Command leader map
 ;; No leader; use C-c everywhere
 ;; Direct shortcuts under C-c (user-reserved prefix)
@@ -61,11 +89,12 @@
 (global-set-key (kbd "C-c x") #'tab-close)
 (global-set-key (kbd "C-c y") #'fork-git-show-inline-commit)
 (global-set-key (kbd "C-c l") #'fork-git-inline-blame-toggle)
+(global-set-key (kbd "C-c w") #'my/toggle-soft-wrap-global)
 
 ;; Symbols: fast function/class navigation
 (global-set-key (kbd "C-c j") #'consult-imenu)
-(global-set-key (kbd "C-c d") #'xref-find-definitions)
-(global-set-key (kbd "C-c r") #'xref-find-references)
+(global-set-key (kbd "C-c d") #'my/goto-definition-smart)
+(global-set-key (kbd "C-c r") #'my/find-references-smart)
 
 ;; No leader defaults
 
@@ -114,7 +143,7 @@
 
 ;; LSP: keep leader actions; also provide C-c helpers
 (with-eval-after-load 'lsp-mode
-  (define-key lsp-mode-map (kbd "C-c r") #'xref-find-references)
+  (define-key lsp-mode-map (kbd "C-c r") #'my/find-references-smart)
   (define-key lsp-mode-map (kbd "C-c .") #'lsp-execute-code-action)
   (define-key lsp-mode-map (kbd "C-c f") #'lsp-format-buffer)
   (define-key lsp-mode-map (kbd "C-c i") #'lsp-organize-imports))

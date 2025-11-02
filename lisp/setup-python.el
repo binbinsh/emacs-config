@@ -3,6 +3,8 @@
   :commands lsp-deferred)
 (use-package lsp-ui :after lsp-mode)
 (use-package lsp-pyright :after lsp-mode)
+(with-eval-after-load 'lsp-mode
+  (require 'lsp-pyright))
 (add-hook 'python-mode-hook #'lsp-deferred)
 
 ;; LSP preferences
@@ -18,6 +20,7 @@
    (make-lsp-client
     :new-connection (lsp-stdio-connection (lambda () '("uv" "run" "ruff-lsp")))
     :activation-fn (lsp-activate-on "python")
+    :add-on? t
     :server-id 'ruff_lsp)))
 
 ;; Format + organize imports on save

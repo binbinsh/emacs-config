@@ -76,18 +76,6 @@
 
 (add-hook 'vlf-mode-hook #'my/large-file--announce)
 
-(defun my/large-file-toggle-soft-wrap ()
-  "Toggle soft wrap (visual-line-mode) in large files on demand."
-  (interactive)
-  (visual-line-mode 'toggle))
-
-(add-hook 'vlf-mode-hook
-          (lambda ()
-            (local-set-key (kbd "C-c w") #'my/large-file-toggle-soft-wrap)))
-
-(add-hook 'so-long-mode-hook
-          (lambda ()
-            (local-set-key (kbd "C-c w") #'my/large-file-toggle-soft-wrap)))
 
 (provide 'setup-large-files)
 
