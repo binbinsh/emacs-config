@@ -9,6 +9,9 @@
   :init
   ;; Prompt to install missing grammars when opening a file
   (setq treesit-auto-install 'prompt)
+
+  ;; Don't warn when no LSP clients are found
+  (setq lsp-warn-no-matched-clients nil)
   
   ;; Prefer tree-sitter majors where possible
   (dolist (pair '((c-mode . c-ts-mode)
