@@ -52,6 +52,10 @@
   ;; Set desired shell before vterm loads; harmless if vterm not yet loaded
   (setq vterm-shell my/terminal-shell))
 
+(with-eval-after-load 'vterm
+  ;; Speed up vterm timer
+  (setq vterm-timer-delay nil))
+
 (defun my/terminal--ensure-vterm ()
   "Ensure vterm is available. Return non-nil if ok."
   (and (eq my/terminal-backend 'vterm)
