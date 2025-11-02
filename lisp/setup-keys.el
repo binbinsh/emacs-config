@@ -20,6 +20,8 @@
 ;; - u: vundo (undo tree)
 ;; - y: show inline commit (blamer)
 ;; - l: toggle inline blame
+;; - d: go to definition
+;; - r: find references
 ;;
 ;; Mode-specific leaders (auto-selected per buffer)
 ;; - Dired/Dirvish: o open, c copy, r rename, + mkdir, d delete, p preview, 2 two-panes
@@ -62,6 +64,8 @@
 
 ;; Symbols: fast function/class navigation
 (global-set-key (kbd "C-c j") #'consult-imenu)
+(global-set-key (kbd "C-c d") #'xref-find-definitions)
+(global-set-key (kbd "C-c r") #'xref-find-references)
 
 ;; No leader defaults
 
@@ -110,7 +114,7 @@
 
 ;; LSP: keep leader actions; also provide C-c helpers
 (with-eval-after-load 'lsp-mode
-  (define-key lsp-mode-map (kbd "C-c r") #'lsp-rename)
+  (define-key lsp-mode-map (kbd "C-c r") #'xref-find-references)
   (define-key lsp-mode-map (kbd "C-c .") #'lsp-execute-code-action)
   (define-key lsp-mode-map (kbd "C-c f") #'lsp-format-buffer)
   (define-key lsp-mode-map (kbd "C-c i") #'lsp-organize-imports))
