@@ -18,6 +18,9 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+;; Improve subprocess I/O throughput (benefits LSP and VCS tooling)
+(setq read-process-output-max (* 3 1024 1024))
+
 ;; Set configs dir
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 

@@ -22,3 +22,8 @@
             (garbage-collect)))
 
 
+(add-hook 'window-setup-hook
+          (lambda ()
+            (message "Emacs ready in %s with %d GCs."
+                     (emacs-init-time)
+                     gcs-done)))
