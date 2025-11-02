@@ -91,6 +91,16 @@
 (global-set-key (kbd "C-c l") #'fork-git-inline-blame-toggle)
 (global-set-key (kbd "C-c w") #'my/toggle-soft-wrap-global)
 
+;; Diagnostics list (prefer Consult; fallback to Flymake's built-ins)
+(defun my/open-diagnostics ()
+  (interactive)
+  (cond
+   ((fboundp 'consult-flymake) (consult-flymake))
+   ((fboundp 'flymake-show-buffer-diagnostics) (flymake-show-buffer-diagnostics))
+   ((fboundp 'flymake-show-diagnostics-buffer) (flymake-show-diagnostics-buffer))
+   (t (user-error "No diagnostics UI available"))))
+(global-set-key (kbd "C-c !") #'my/open-diagnostics)
+
 ;; Symbols: fast function/class navigation
 (global-set-key (kbd "C-c j") #'consult-imenu)
 (global-set-key (kbd "C-c d") #'my/goto-definition-smart)

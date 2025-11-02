@@ -10,7 +10,7 @@
 ;; LSP preferences
 (with-eval-after-load 'lsp-mode
   (setq lsp-completion-provider :capf
-        lsp-prefer-flymake nil
+        lsp-prefer-flymake t
         lsp-ui-doc-enable t
         lsp-ui-sideline-enable t))
 

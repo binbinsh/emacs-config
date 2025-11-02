@@ -239,18 +239,11 @@
   (setq eldoc-box-max-pixel-width 600
         eldoc-box-max-pixel-height 400))
 
-;; Diagnostics: Flycheck with posframe popups (GUI)
-(use-package flycheck
+;; Diagnostics: Flymake (built-in) via LSP
+(use-package flymake
+  :ensure nil
   :init
-  (global-flycheck-mode 1))
-
-(use-package flycheck-posframe
-  :if (display-graphic-p)
-  :after flycheck
-  :init
-  (setq flycheck-posframe-position 'point)
-  :config
-  (add-hook 'flycheck-mode-hook #'flycheck-posframe-mode))
+  (add-hook 'prog-mode-hook #'flymake-mode))
 
 ;; Quality-of-life
 (defalias 'yes-or-no-p 'y-or-n-p)
