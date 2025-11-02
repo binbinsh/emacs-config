@@ -397,4 +397,17 @@
 (setq imenu-auto-rescan t
       imenu-use-popup-menu nil)
 
+;; Do not prompt when killing xwidget-webkit buffers
+(add-hook 'xwidget-webkit-mode-hook
+          (lambda ()
+            ;; Remove process confirmation (if any associated process exists)
+            (setq-local kill-buffer-query-functions
+                        (delq 'process-kill-buffer-query-function
+                              kill-buffer-query-functions))
+            ;; Disable xwidget's own query-on-exit for all widgets in this buffer
+            (when (fboundp 'get-buffer-xwidgets)
+              (dolist (xw (get-buffer-xwidgets (current-buffer)))
+                (when (fboundp 'set-xwidget-query-on-exit-flag)
+                  (set-xwidget-query-on-exit-flag xw nil))))))
+
 (provide 'setup-gui)
