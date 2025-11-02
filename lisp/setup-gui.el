@@ -11,10 +11,10 @@
 ;; Frame behavior and size
 (setq frame-resize-pixelwise t)
 ;; Larger default window size (without forcing fullscreen)
-(add-to-list 'initial-frame-alist '(width . 180))
-(add-to-list 'initial-frame-alist '(height . 60))
-(add-to-list 'default-frame-alist '(width . 180))
-(add-to-list 'default-frame-alist '(height . 60))
+(add-to-list 'initial-frame-alist '(width . 160))
+(add-to-list 'initial-frame-alist '(height . 64))
+(add-to-list 'default-frame-alist '(width . 160))
+(add-to-list 'default-frame-alist '(height . 64))
 
 ;; Clean chrome
 (when (fboundp 'menu-bar-mode) (if (eq system-type 'darwin) (menu-bar-mode 1) (menu-bar-mode -1)))
@@ -98,9 +98,9 @@
 
 ;; Larger tabs (increase size without changing spacing between tabs)
 (with-eval-after-load 'tab-bar
-  (set-face-attribute 'tab-bar nil :height 180)
-  (set-face-attribute 'tab-bar-tab nil :height 180 :weight 'semibold)
-  (set-face-attribute 'tab-bar-tab-inactive nil :height 180 :weight 'normal))
+  (set-face-attribute 'tab-bar nil :height 160)
+  (set-face-attribute 'tab-bar-tab nil :height 160 :weight 'semibold)
+  (set-face-attribute 'tab-bar-tab-inactive nil :height 160 :weight 'normal))
 
 ;; Smooth scrolling
 (pixel-scroll-precision-mode 1)
