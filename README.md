@@ -8,7 +8,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 
 ### Main features
 - **Global AI assistant** on `C-c a`: type a command and it will either execute returned Emacs Lisp or show info. Requires LM Studio API running locally (defaults: `my/lmstudio-base-url`, `my/lmstudio-model` in `lisp/setup-profile.el`).
-- **UI/UX**: `Catppuccin` (Latte) theme, JetBrainsMono Nerd Font + CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator, posframe UIs (`which-key-posframe`, `vertico-posframe`), Helpful/Eldoc‑Box hovers.
+- **UI/UX**: `Catppuccin` (Latte) theme, JetBrainsMono Nerd Font + CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator. Posframe UIs: `which-key-posframe`, `vertico-posframe`, `flycheck-posframe`, `transient-posframe`. Helpful/Eldoc‑Box hovers.
 - **Completion & search**: Vertico, Orderless, Marginalia, Consult (+ LSP), Embark, Corfu + Cape + popup info, kind‑icon.
 - **Explorer & files**: Dirvish sidebar and enhanced Dired (icons, git info, quick preview, two‑pane), `diff-hl` fringe highlights.
 - **Large files**: 64MB+ open via VLF chunks; toggle soft wrap with `C-c w`; highlighting optional.

@@ -143,6 +143,13 @@
   :config
   (which-key-posframe-mode 1))
 
+;; Transient menus in a posframe (affects Magit/transient UIs)
+(use-package transient-posframe
+  :if (display-graphic-p)
+  :after transient
+  :config
+  (transient-posframe-mode 1))
+
 ;; Completion: Vertico + Orderless + Marginalia + Consult + Embark
 (use-package vertico
   :init
@@ -231,6 +238,19 @@
   :init
   (setq eldoc-box-max-pixel-width 600
         eldoc-box-max-pixel-height 400))
+
+;; Diagnostics: Flycheck with posframe popups (GUI)
+(use-package flycheck
+  :init
+  (global-flycheck-mode 1))
+
+(use-package flycheck-posframe
+  :if (display-graphic-p)
+  :after flycheck
+  :init
+  (setq flycheck-posframe-position 'point)
+  :config
+  (add-hook 'flycheck-mode-hook #'flycheck-posframe-mode))
 
 ;; Quality-of-life
 (defalias 'yes-or-no-p 'y-or-n-p)
