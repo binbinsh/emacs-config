@@ -25,13 +25,15 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - All keybindings are centralized in `lisp/setup-keys.el`.
 - Global and mode-specific actions use `C-c` single keys.
 
-### macOS一键启动vterm
+### macOS一键启动Emacs VTerm
 
 1. 打开 Automator → 新建“应用程序”。
 2. 添加“运行 Shell 脚本”（Shell 选 `/bin/zsh`），粘贴：
 
 ```shell
-/usr/bin/open -a "/Applications/Emacs.app" --args --eval '(progn (require (quote setup-terminal)) (my/terminal-open))'
+/usr/bin/open -n -a "/Applications/Emacs.app" --args --eval '(progn
+  (require (quote setup-terminal))
+  (my/terminal-open))'
 ```
 
-3. 保存到 `/Applications`，命名如 `Emacs vterm.app`，拖到 Dock。
+3. 保存到 `/Applications`，命名如 `Emacs VTerm.app`，拖到 Dock。
