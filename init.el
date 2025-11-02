@@ -6,6 +6,9 @@
                          ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
                          ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
 
+(setq use-package-compute-statistics t
+      use-package-verbose t)
+
 ;; Bootstrap use-package
 (require 'package)
 (package-initialize)
@@ -30,10 +33,13 @@
 ;; Disable Custom file creation and loading
 (setq custom-file null-device)
 
-;; macOS PATH/env sync
+;; macOS PATH/env sync (minimize shell startup cost)
 (use-package exec-path-from-shell
-  :if (memq system-type '(darwin))
-  :config (exec-path-from-shell-initialize))
+  :if (and (memq system-type '(darwin)) (display-graphic-p))
+  :init
+  (setq exec-path-from-shell-arguments '("-l"))
+  :config
+  (exec-path-from-shell-copy-envs '("PATH" "MANPATH" "LANG" "LC_ALL" "SSH_AUTH_SOCK")))
 
 ;; Tmp/cache files (ensure paths set before enabling modes)
 (require 'setup-tmpfiles)
@@ -60,9 +66,6 @@
 ;; Context-aware Command leader keys
 (require 'setup-keys)
 
-;; Global AI helpers
-(require 'setup-ai)
-
 ;; Large files & long lines (VLF + so-long)
 (require 'setup-large-files)
 
@@ -77,3 +80,12 @@
         gcmh-high-cons-threshold (* 16 1024 1024))
   ;; Enable after early-init's emacs-startup-hook has restored GC settings
   (add-hook 'emacs-startup-hook #'gcmh-mode t))
+
+;; Background native compilation of local config for future startups
+(when (and (fboundp 'native-comp-available-p)
+           (native-comp-available-p)
+           (fboundp 'native-compile-async))
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (ignore-errors
+                (native-compile-async (expand-file-name "lisp" user-emacs-directory) 'recursively)))))

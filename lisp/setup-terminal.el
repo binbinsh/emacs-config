@@ -8,8 +8,8 @@
 (require 'seq)
 (require 'subr-x) ;; string-join, string-trim, string-remove-suffix
 (require 'cl-lib)
-(use-package transient)
-(require 'setup-ai)
+;; Load AI helpers only when needed to avoid startup overhead
+(autoload 'my/ai-suggest-shell "setup-ai" nil t)
 
 (defgroup my-terminal nil
   "Termius-like terminal workflow and AI-assisted command suggestions."
@@ -47,9 +47,10 @@
   :group 'my-terminal)
 
 (use-package vterm
-  :config
-  (when (eq my/terminal-backend 'vterm)
-    (setq vterm-shell my/terminal-shell)))
+  :commands (vterm)
+  :init
+  ;; Set desired shell before vterm loads; harmless if vterm not yet loaded
+  (setq vterm-shell my/terminal-shell))
 
 (defun my/terminal--ensure-vterm ()
   "Ensure vterm is available. Return non-nil if ok."
@@ -270,20 +271,26 @@ The structure is intentionally flexible and editable via customize."
 ;; Transient menu
 ;; ----------------------------------------------------------------------------
 
-(transient-define-prefix my/terminal-menu ()
-  "Terminal hub"
-  ["Terminal"
-   ("t" "Open" my/terminal-open)
-   ("T" "Open here" my/terminal-open-here)
-   ("n" "Open named" my/terminal-open-named)]
-  ["Hosts"
-   ("h" "SSH connect" my/terminal-ssh-connect)
-   ("d" "Remote Dired" my/terminal-remote-dired)
-   ("e" "Edit hosts" (lambda () (interactive) (customize-variable 'my/terminal-hosts)))]
-  ["Tunnels"
-   ("s" "Start tunnel" my/terminal-tunnel-start)
-   ("x" "Stop tunnel" my/terminal-tunnel-stop)
-   ("l" "List tunnels" my/terminal-tunnel-list)])
+(defun my/terminal-menu ()
+  "Open terminal hub menu (loads transient on first use)."
+  (interactive)
+  (require 'transient)
+  (unless (fboundp 'my/terminal-menu--impl)
+    (transient-define-prefix my/terminal-menu--impl ()
+      "Terminal hub"
+      ["Terminal"
+       ("t" "Open" my/terminal-open)
+       ("T" "Open here" my/terminal-open-here)
+       ("n" "Open named" my/terminal-open-named)]
+      ["Hosts"
+       ("h" "SSH connect" my/terminal-ssh-connect)
+       ("d" "Remote Dired" my/terminal-remote-dired)
+       ("e" "Edit hosts" (lambda () (interactive) (customize-variable 'my/terminal-hosts)))]
+      ["Tunnels"
+       ("s" "Start tunnel" my/terminal-tunnel-start)
+       ("x" "Stop tunnel" my/terminal-tunnel-stop)
+       ("l" "List tunnels" my/terminal-tunnel-list)]))
+  (call-interactively 'my/terminal-menu--impl))
 
 ;; Keybindings are provided by the shared Command leader in setup-keys.el
 

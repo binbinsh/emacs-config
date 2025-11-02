@@ -7,6 +7,8 @@
 ;; Package setup happens in init.el; speed autoloads
 (setq package-enable-at-startup nil)
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+
+;; Load tmp/cache setup as early as possible
 (require 'setup-tmpfiles)
 
 ;; Reduce costly frame resizes during theme/UI setup

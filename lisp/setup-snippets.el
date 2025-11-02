@@ -18,6 +18,9 @@
       (make-directory private t))
     (setq yas-snippet-dirs dirs))
   :config
+  ;; Default template for new snippets, including a group header
+  (setq yas-new-snippet-default
+        "# -*- mode: snippet -*-\n# name: $1\n# key: $2\n# group: $3\n# --\n$0")
   (yas-global-mode 1))
 
 

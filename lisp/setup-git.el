@@ -5,12 +5,15 @@
 ;; manual repo list management, and an AI commit message generator that
 ;; can call LM Studio (local OpenAI-compatible) or an online OpenAI-compatible API.
 
-(use-package magit)
-(use-package transient)
-(require 'json)
-(require 'url)
+(use-package magit
+  :commands (magit-status magit-status-setup-buffer magit-dispatch magit-file-dispatch
+             magit-blame-addition magit-blame-quit magit-log-buffer-file magit-log-all)
+  :init
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1
+        magit-bury-buffer-function #'magit-restore-window-configuration))
+
 (require 'subr-x)  ; for string-empty-p
-(require 'project) ; for project-current/project-root
+(require 'project nil t) ; for project-current/project-root (optional at startup)
 
 ;; -----------------------------------------------------------------------------
 ;; Customization
@@ -68,8 +71,9 @@ One of 'lmstudio (local LM Studio OpenAI-compatible) or 'openai (online OpenAI-c
 
 (defun fork-git--project-root ()
   "Find a reasonable project root (Magit toplevel > project.el > default-directory)."
-  (or (ignore-errors (magit-toplevel))
-      (let* ((proj (ignore-errors (project-current)))
+  (or (when (fboundp 'magit-toplevel)
+        (ignore-errors (magit-toplevel)))
+      (let* ((proj (ignore-errors (and (fboundp 'project-current) (project-current))))
              (root (and proj (ignore-errors (project-root proj)))))
         root)
       default-directory))
@@ -195,6 +199,8 @@ One of 'lmstudio (local LM Studio OpenAI-compatible) or 'openai (online OpenAI-c
 (defun fork-git--http-post-json (url payload &optional api-key)
   "POST PAYLOAD (JSON string) to URL and return parsed JSON object.
 If API-KEY is non-nil, send it as a Bearer token. Return nil if request fails."
+  (require 'url)
+  (require 'json)
   (let* ((url-request-method "POST")
          (url-request-extra-headers
           (append '(("Content-Type" . "application/json"))
@@ -219,6 +225,7 @@ If API-KEY is non-nil, send it as a Bearer token. Return nil if request fails."
 (defun fork-git--gen-via-chat (endpoint model api-key diff)
   "Call an OpenAI-compatible chat/completions API at ENDPOINT with MODEL and DIFF.
 API-KEY may be nil. Return the content string or a fallback message."
+  (require 'json)
   (let* ((url (fork-git--join endpoint "/chat/completions"))
          (payload (json-encode
                    `((model . ,model)
