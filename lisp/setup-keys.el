@@ -135,7 +135,10 @@
     (define-key map (kbd "C-c h") #'my/terminal-ssh-connect)
     (define-key map (kbd "C-c l") #'my/terminal-remote-dired)
     (define-key map (kbd "C-c c") #'my/terminal-ai-suggest)
-    (define-key map (kbd "C-c r") #'my/terminal-tunnel-list)))
+    (define-key map (kbd "C-c r") #'my/terminal-tunnel-list)
+    ;; Make C-y and s-v paste from system clipboard via simpleclip
+    (define-key map (kbd "C-y") #'my/vterm-clipboard-yank)
+    (define-key map [remap simpleclip-paste] #'my/vterm-clipboard-yank)))
 
 ;; Magit: C-c inside Magit buffers
 (with-eval-after-load 'magit

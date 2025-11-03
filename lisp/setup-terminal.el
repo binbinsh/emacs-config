@@ -54,7 +54,11 @@
 
 (with-eval-after-load 'vterm
   ;; Speed up vterm timer
-  (setq vterm-timer-delay nil))
+  (setq vterm-timer-delay nil)
+  ;; Ensure paste keys are handled by Emacs in vterm
+  (when (boundp 'vterm-keymap-exceptions)
+    (dolist (k '("s-v"))
+      (add-to-list 'vterm-keymap-exceptions k))))
 
 (defun my/terminal--ensure-vterm ()
   "Ensure vterm is available. Return non-nil if ok."
@@ -329,5 +333,23 @@ The structure is intentionally flexible and editable via customize."
     (if (not reply)
         (message "LM Studio not reachable or no content returned.")
       (my/terminal--send-to-vterm-or-insert reply t))))
+
+;; ----------------------------------------------------------------------------
+;; Clipboard → vterm paste (simpleclip integration)
+;; ----------------------------------------------------------------------------
+
+(defun my/vterm-clipboard-yank ()
+  "Paste system clipboard into vterm using simpleclip when available."
+  (interactive)
+  (let* ((text (cond
+                ((fboundp 'simpleclip-get-contents)
+                 (simpleclip-get-contents))
+                ((fboundp 'gui-get-selection)
+                 (gui-get-selection 'CLIPBOARD))
+                (t nil))))
+    (when (and text (not (string-empty-p text)))
+      (if (and (boundp 'vterm--process) vterm--process)
+          (vterm-send-string text t)
+        (insert text)))))
 
 (provide 'setup-terminal)
