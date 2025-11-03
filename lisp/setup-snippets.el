@@ -108,8 +108,9 @@
                        (buffer-list))))
         (or visible
             mru
-            (let ((default-directory (expand-file-name "~")))
-              (vterm)
+           (let ((default-directory (expand-file-name "~"))
+                 (name (format "vterm-%s" (format-time-string "%Y%m%d-%H%M%S"))))
+              (vterm name)
               (current-buffer))))))))
 
 (defun my/snippet--vterm-send (text)

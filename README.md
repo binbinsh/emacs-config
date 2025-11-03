@@ -38,11 +38,10 @@ Global shortcuts
 | `C-c j` | Symbols (imenu) |
 | `M-.` | Go to definition (LSP); fallback dumb-jump when unavailable |
 | `C-c d` | Go to definition |
-| `C-c r` | Find references |
+| `C-c r` | Remote Dired (TRAMP) |
 | `C-c !` | List diagnostics (consult-flymake) |
 | `C-c v` | Toggle vterm panel |
 | `C-c h` | SSH (terminal hub) |
-| `C-c t` | Remote Dired (TRAMP) |
 | `C-c g` | Magit status |
 | `C-c y` | Show inline commit info |
 | `C-c l` | Toggle inline blame |
@@ -61,6 +60,14 @@ Mode-specific shortcuts
 | Dired/Dirvish | `+` | Create directory |
 | Dired/Dirvish | `D` | Delete |
 | Dired/Dirvish | `TAB` | Switch pane |
+| vterm | `C-c h` | SSH connect (host profiles) |
+| vterm | `C-c r` | Remote Dired (TRAMP) |
+| vterm | `C-c t` | List SSH tunnels |
+| vterm | `C-c s` | Snippet selector (shell to vterm) |
+| LSP | `C-c r` | Find references |
+| LSP | `C-c .` | Code action |
+| LSP | `C-c f` | Format buffer |
+| LSP | `C-c i` | Organize imports |
 | Notmuch (search/show) | `e` | Archive |
 | Notmuch (search/show) | `*` | Star |
 | Notmuch (search/show) | `l` | AI: suggest labels |

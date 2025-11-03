@@ -388,16 +388,19 @@
 
 ;; Integrated terminal toggle (bottom panel)
 (defun my/toggle-vterm ()
-  "Toggle a bottom vterm panel (approx. 30% height)."
+  "Toggle a bottom vterm panel (approx. 30% height), using buffer named 'vterm'."
   (interactive)
-  (let* ((buf (get-buffer "*vterm*"))
-         (win (and buf (get-buffer-window buf t))))
-    (if (and buf win)
-      (delete-window win)
+  (let* ((name "vterm")
+         (buf (get-buffer name))
+         (win (and buf (get-buffer-window buf))))
+    (if (and buf (window-live-p win))
+        (delete-window win)
       (let* ((target-lines (floor (* 0.3 (frame-height))))
              (new-win (split-window (selected-window) (- target-lines) 'below)))
         (select-window new-win)
-        (vterm)))))
+        (if (buffer-live-p buf)
+            (switch-to-buffer buf)
+          (vterm name))))))
 
 ;; Keybindings moved to the unified Command leader (see setup-keys.el)
 

@@ -13,7 +13,7 @@
 ;; - s: snippet select
 ;; - e: focus explorer
 ;; - v: toggle vterm panel
-;; - t: Remote Dired (TRAMP)
+;; - r: Remote Dired (TRAMP)
 ;; - g: Magit status
 ;; - [: prev tab   ]: next tab
 ;; - n: new tab    x: close tab
@@ -21,11 +21,11 @@
 ;; - y: show inline commit (blamer)
 ;; - l: toggle inline blame
 ;; - d: go to definition
-;; - r: find references
+;; - !: diagnostics list
 ;;
 ;; Mode-specific leaders (auto-selected per buffer)
 ;; - Dired/Dirvish: o open, c copy, r rename, + mkdir, d delete, p preview, 2 two-panes
-;; - vterm: o open, h SSH, l Remote Dired, a AI suggest, r list tunnels
+;; - vterm: o open file, h SSH, r Remote Dired, a AI suggest, t list tunnels
 ;; - Magit: g status, b branch graph, h file history, a AI commit
 ;; - Python: a code action, r rename, f format, i organize imports, t pytest
 ;; - Markdown: l live preview
@@ -81,7 +81,7 @@
 (global-set-key (kbd "C-c m") #'my/notmuch-open-gmail-ui)
 (global-set-key (kbd "C-c o") #'find-file)
 (global-set-key (kbd "C-c h") #'my/terminal-ssh-connect)
-(global-set-key (kbd "C-c t") #'my/terminal-remote-dired)
+(global-set-key (kbd "C-c r") #'my/terminal-remote-dired)
 (global-set-key (kbd "C-c u") #'vundo)
 (global-set-key (kbd "C-c [") #'tab-previous)
 (global-set-key (kbd "C-c ]") #'tab-next)
@@ -131,11 +131,11 @@
 (with-eval-after-load 'vterm
   (let ((map vterm-mode-map))
     (define-key map (kbd "C-c s") #'my/snippet-select-smart)
-    (define-key map (kbd "C-c o") #'my/terminal-open)
+    (define-key map (kbd "C-c o") #'find-file)
     (define-key map (kbd "C-c h") #'my/terminal-ssh-connect)
-    (define-key map (kbd "C-c l") #'my/terminal-remote-dired)
+    (define-key map (kbd "C-c r") #'my/terminal-remote-dired)
     (define-key map (kbd "C-c c") #'my/terminal-ai-suggest)
-    (define-key map (kbd "C-c r") #'my/terminal-tunnel-list)
+    (define-key map (kbd "C-c t") #'my/terminal-tunnel-list)
     ;; Make C-y and s-v paste from system clipboard via simpleclip
     (define-key map (kbd "C-y") #'my/vterm-clipboard-yank)
     (define-key map [remap simpleclip-paste] #'my/vterm-clipboard-yank)))

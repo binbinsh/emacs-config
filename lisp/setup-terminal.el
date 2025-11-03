@@ -10,6 +10,8 @@
 (require 'cl-lib)
 ;; Load AI helpers only when needed to avoid startup overhead
 (autoload 'my/ai-suggest-shell "setup-ai" nil t)
+;; Reuse existing vterm selection helper from snippets module
+(autoload 'my/snippet--ensure-local-vterm "setup-snippets" nil t)
 
 (defgroup my-terminal nil
   "Termius-like terminal workflow and AI-assisted command suggestions."
@@ -72,7 +74,7 @@
   (cond
    ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
     (let ((vterm-shell my/terminal-shell))
-      (vterm)))
+      (vterm (format "vterm-%s" (format-time-string "%Y%m%d-%H%M%S")))))
    (t (message "No supported terminal backend available."))))
 
 (defun my/terminal-open-here (&optional directory)
@@ -83,7 +85,7 @@
      ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
       (let ((default-directory dir)
             (vterm-shell my/terminal-shell))
-        (vterm)))
+        (vterm (format "vterm-%s" (format-time-string "%Y%m%d-%H%M%S")))))
      (t (message "No supported terminal backend available.")))))
 
 (defun my/terminal-open-named (name)
@@ -94,6 +96,10 @@
     (let ((vterm-shell my/terminal-shell))
       (vterm name)))
    (t (message "No supported terminal backend available."))))
+
+;; Find or create a vterm in the current frame, preferring the current buffer
+;; if it's already a vterm. Otherwise reuse a visible vterm window in this
+;; frame, or create a uniquely named one with a timestamp.
 
 ;; ----------------------------------------------------------------------------
 ;; Host profiles and SSH / TRAMP helpers
@@ -140,7 +146,7 @@ The structure is intentionally flexible and editable via customize."
     (string-join parts " ")))
 
 (defun my/terminal-ssh-connect ()
-  "Pick a host profile and connect via ssh in vterm."
+  "Pick a host profile and connect via ssh in a vterm local to this frame."
   (interactive)
   (if (null my/terminal-hosts)
       (message "No host profiles. Use M-x customize-variable my/terminal-hosts to add.")
@@ -149,10 +155,13 @@ The structure is intentionally flexible and editable via customize."
            (cmd (my/terminal--build-ssh-command host)))
       (if (not (my/terminal--ensure-vterm))
           (message "vterm not available.")
-        (my/terminal-open)
-        (when (and (boundp 'vterm--process) vterm--process)
-          (vterm-send-string cmd)
-          (vterm-send-return))))))
+        (let ((buf (my/snippet--ensure-local-vterm)))
+          (when (buffer-live-p buf)
+            (pop-to-buffer buf)
+            (with-current-buffer buf
+              (when (and (boundp 'vterm--process) vterm--process)
+                (vterm-send-string cmd)
+                (vterm-send-return)))))))))
 
 (defun my/terminal--tramp-path-for-host (host &optional path)
   "Build a TRAMP path for HOST plist. Optional PATH defaults to ~/"
