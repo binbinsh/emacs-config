@@ -8,7 +8,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 
 ### Main features
 - **Global AI**: type a command and it will either execute returned Emacs Lisp or show info. Requires LM Studio API running locally.
-- **UI/UX**: `Catppuccin` (Latte) theme, JetBrainsMono Nerd Font + CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator. Posframe UIs. Helpful/Eldoc‑Box hovers.
+- **UI/UX**: `Monokai Pro Light` theme, JetBrainsMono Nerd Font + CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator. Posframe UIs. Helpful/Eldoc‑Box hovers.
 - **Completion & search**: Vertico, Orderless, Marginalia, Consult (+ LSP), Embark, Corfu + Cape + popup info, kind‑icon.
 - **Diagnostics**: Flymake (built‑in) via LSP (Consult if available, else Flymake buffer).
 - **Explorer & files**: Dirvish sidebar and enhanced Dired (icons, git info, quick preview, two‑pane), `diff-hl` fringe highlights.

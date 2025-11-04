@@ -1,20 +1,23 @@
 ;; Core GUI baseline (Cursor-like)
 (setq inhibit-startup-screen t)
 
-;; Theme (Catppuccin Latte - light)
-(use-package catppuccin-theme
-  :init
-  (setq catppuccin-flavor 'latte)
+;; Theme (Monokai Light)
+(use-package monokai-pro-theme
   :config
-  (load-theme 'catppuccin t))
+  ;; Extend upstream theme with a hand-rolled light palette.
+  (let ((theme-dir (expand-file-name "lisp" user-emacs-directory)))
+    (add-to-list 'custom-theme-load-path theme-dir)
+    (unless (custom-theme-p 'monokai-pro-light)
+      (load (expand-file-name "monokai-pro-light-theme.el" theme-dir) nil t)))
+  (load-theme 'monokai-pro-light t))
 
 ;; Frame behavior and size
 (setq frame-resize-pixelwise t)
 ;; Larger default window size (without forcing fullscreen)
-(add-to-list 'initial-frame-alist '(width . 160))
-(add-to-list 'initial-frame-alist '(height . 64))
-(add-to-list 'default-frame-alist '(width . 160))
-(add-to-list 'default-frame-alist '(height . 64))
+(add-to-list 'initial-frame-alist '(width . 150))
+(add-to-list 'initial-frame-alist '(height . 75))
+(add-to-list 'default-frame-alist '(width . 150))
+(add-to-list 'default-frame-alist '(height . 75))
 
 ;; Clean chrome
 (when (fboundp 'menu-bar-mode) (if (eq system-type 'darwin) (menu-bar-mode 1) (menu-bar-mode -1)))
