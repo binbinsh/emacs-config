@@ -7,7 +7,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 ```
 
 ### Main features
-- **Global AI**: type a command and it will either execute returned Emacs Lisp or show info. Requires LM Studio API running locally.
+- **Global AI (beta)**: type a command and it will either execute returned Emacs Lisp or show info. Requires LM Studio API running locally.
 - **UI/UX**: `Monokai Pro Light` theme, JetBrainsMono Nerd Font + CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator. Posframe UIs. Helpful/Eldoc‑Box hovers.
 - **Completion & search**: Vertico, Orderless, Marginalia, Consult (+ LSP), Embark, Corfu + Cape + popup info, kind‑icon.
 - **Diagnostics**: Flymake (built‑in) via LSP (Consult if available, else Flymake buffer).
@@ -36,7 +36,6 @@ Global shortcuts
 | `C-c b` | Switch buffers |
 | `C-c p` | Project files |
 | `C-c j` | Symbols (imenu) |
-| `M-.` | Go to definition (LSP); fallback dumb-jump when unavailable |
 | `C-c d` | Go to definition |
 | `C-c r` | Remote Dired (TRAMP) |
 | `C-c !` | List diagnostics (consult-flymake) |
@@ -74,15 +73,3 @@ Mode-specific shortcuts
 | Notmuch (search/show) | `r` | AI: draft reply |
 | Notmuch (search/show) | `s` | AI: summarize thread |
 
-### macOS quick launcher for Emacs VTerm
-
-1. Open Automator → New “Application”.
-2. Add “Run Shell Script” (shell: `/bin/zsh`) and paste:
-
-```shell
-/usr/bin/open -n -a "/Applications/Emacs.app" --args --eval '(progn
-  (require (quote setup-terminal))
-  (my/terminal-open))'
-```
-
-3. Save to `/Applications` as something like `Emacs VTerm.app` and drag it to the Dock.
