@@ -19,7 +19,7 @@
 ;; - n: new tab    x: close tab
 ;; - u: vundo (undo tree)
 ;; - y: show inline commit (blamer)
-;; - l: toggle inline blame
+;; - l: open LaTeX workspace layout
 ;; - d: go to definition
 ;; - !: diagnostics list
 ;;
@@ -88,7 +88,7 @@
 (global-set-key (kbd "C-c n") #'tab-new)
 (global-set-key (kbd "C-c x") #'tab-close)
 (global-set-key (kbd "C-c y") #'fork-git-show-inline-commit)
-(global-set-key (kbd "C-c l") #'fork-git-inline-blame-toggle)
+(global-set-key (kbd "C-c l") #'my/latex-workspace)
 (global-set-key (kbd "C-c w") #'my/toggle-soft-wrap-global)
 
 ;; Diagnostics list (prefer Consult; fallback to Flymake's built-ins)
@@ -147,7 +147,7 @@
     (define-key map (kbd "C-c b") #'fork-git-branch-graph)
     (define-key map (kbd "C-c h") #'fork-git-file-history)
     (define-key map (kbd "C-c c") #'fork-git-generate-commit-message)
-    (define-key map (kbd "C-c l") #'fork-git-blame-toggle)
+    (define-key map (kbd "C-c B") #'fork-git-blame-toggle)
     (define-key map (kbd "C-c d") #'fork-git-magit-delta-toggle)))
 
 ;; Python: pytest under C-c t (LSP helpers are already bound globally)

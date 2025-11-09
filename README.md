@@ -18,7 +18,8 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - **Git**: `C-c g` opens a Fork-style repo dashboard grouped by folders (TAB to fold/unfold); Magit command center (M-x `fork-git-command-center`) covers sync, commit/amend, branch/tag/remote/stash/submodule tools, Git-flow, optional Git LFS support, inline blame overlays, delta-enhanced diffs, AI commit assistant, and stashes surfaced in status.
 - **Python**: LSP (pyright), Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugging via `dap-mode`/debugpy.
 - **Markdown**: Auto live preview in a right split (xwidget‑webkit or EWW).
-- **Snippets**: Yasnippet with Consult‑powered searchable selection, global activation, personal snippets in `~/.config/emacs/snippets/` (outside this repo).
+- **LaTeX workspace**: `C-c l` launches a three-column view (explorer, editor, PDF preview) with auto TeX detection and save-to-refresh builds.
+- **Snippets**: Yasnippet with Consult-powered searchable selection, global activation, personal snippets in `~/.config/emacs/snippets/` (outside this repo).
 - **Clipboard & perf**: `simpleclip` clipboard integration; smoother GC via `gcmh`.
 - **Gmail with AI**: run `install-emacs.sh`, then `setup-gmail.sh you@gmail.com`; Gmail UI and AI helpers available after launch.
 
@@ -43,7 +44,8 @@ Global shortcuts
 | `C-c h` | SSH (terminal hub) |
 | `C-c g` | Fork Git repo dashboard (folder groups, TAB to fold/unfold) |
 | `C-c y` | Show inline commit info |
-| `C-c l` | Toggle inline blame |
+| `C-c l` | Open LaTeX workspace (explorer + editor + PDF preview) |
+| `C-c B` | Toggle inline blame |
 | `C-c s` | Global snippet selector (shell snippets go to vterm) |
 | `C-c a` | Global AI assistant (requires local LM Studio) |
 | `C-c w` | Toggle soft wrap (useful for very large files) |

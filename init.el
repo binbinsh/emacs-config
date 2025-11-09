@@ -4,14 +4,16 @@
 ;; You may delete these explanatory comments.
 (setq package-archives '(("gnu"    . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
                          ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
-                         ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+                         ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+                         ("melpa-origin" . "https://melpa.org/packages/")))
 
 (setq use-package-compute-statistics t
       use-package-verbose t)
 
 ;; Bootstrap use-package
 (require 'package)
-(package-initialize)
+(unless package--initialized
+  (package-initialize))
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -59,6 +61,9 @@
 
 ;; Languages: LSP hooks and navigation helpers
 (require 'setup-langs)
+
+;; LaTeX workspace tools
+(require 'setup-latex)
 
 ;; Gmail/Notmuch + LM Studio integration
 (require 'setup-gmail nil t)
