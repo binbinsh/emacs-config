@@ -15,7 +15,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - **Large files**: 64MB+ open via VLF chunks; soft wrap toggle available; highlighting optional.
 - **Language support**: 20+ languages with Tree-sitter syntax, LSP hooks, and smart navigation (symbols/definitions, ripgrep fallback).
 - **Terminal**: Integrated vterm panel toggle; terminal hub (SSH, remote Dired via TRAMP, tunnels); optional AI command suggestions via LM Studio.
-- **Git**: Magit workflow, inline blame overlays, delta‑enhanced diffs, optional AI commit messages.
+- **Git**: `C-c g` opens a Fork-style repo dashboard grouped by folders (TAB to fold/unfold); Magit command center (M-x `fork-git-command-center`) covers sync, commit/amend, branch/tag/remote/stash/submodule tools, Git-flow, optional Git LFS support, inline blame overlays, delta-enhanced diffs, AI commit assistant, and stashes surfaced in status.
 - **Python**: LSP (pyright), Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugging via `dap-mode`/debugpy.
 - **Markdown**: Auto live preview in a right split (xwidget‑webkit or EWW).
 - **Snippets**: Yasnippet with Consult‑powered searchable selection, global activation, personal snippets in `~/.config/emacs/snippets/` (outside this repo).
@@ -41,7 +41,7 @@ Global shortcuts
 | `C-c !` | List diagnostics (consult-flymake) |
 | `C-c v` | Toggle vterm panel |
 | `C-c h` | SSH (terminal hub) |
-| `C-c g` | Magit status |
+| `C-c g` | Fork Git repo dashboard (folder groups, TAB to fold/unfold) |
 | `C-c y` | Show inline commit info |
 | `C-c l` | Toggle inline blame |
 | `C-c s` | Global snippet selector (shell snippets go to vterm) |
@@ -72,4 +72,3 @@ Mode-specific shortcuts
 | Notmuch (search/show) | `l` | AI: suggest labels |
 | Notmuch (search/show) | `r` | AI: draft reply |
 | Notmuch (search/show) | `s` | AI: summarize thread |
-

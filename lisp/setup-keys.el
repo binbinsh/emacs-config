@@ -14,7 +14,7 @@
 ;; - e: focus explorer
 ;; - v: toggle vterm panel
 ;; - r: Remote Dired (TRAMP)
-;; - g: Magit status
+;; - g: Magit repository dashboard
 ;; - [: prev tab   ]: next tab
 ;; - n: new tab    x: close tab
 ;; - u: vundo (undo tree)
@@ -73,7 +73,7 @@
 ;; Direct shortcuts under C-c (user-reserved prefix)
 (global-set-key (kbd "C-c e") #'my/focus-explorer)
 (global-set-key (kbd "C-c v") #'my/toggle-vterm)
-(global-set-key (kbd "C-c g") #'fork-git-open-status)
+(global-set-key (kbd "C-c g") #'fork-git-open-repo-dashboard)
 (global-set-key (kbd "C-c s") #'my/snippet-select-smart)
 (global-set-key (kbd "C-c /") #'consult-ripgrep)
 (global-set-key (kbd "C-c b") #'consult-buffer)
@@ -143,7 +143,7 @@
 ;; Magit: C-c inside Magit buffers
 (with-eval-after-load 'magit
   (let ((map magit-mode-map))
-    (define-key map (kbd "C-c g") #'fork-git-open-status)
+    (define-key map (kbd "C-c g") #'fork-git-open-repo-dashboard)
     (define-key map (kbd "C-c b") #'fork-git-branch-graph)
     (define-key map (kbd "C-c h") #'fork-git-file-history)
     (define-key map (kbd "C-c c") #'fork-git-generate-commit-message)
@@ -218,4 +218,3 @@
   (define-key notmuch-show-mode-map (kbd "r") #'my/notmuch-ai-generate-reply))
 
 (provide 'setup-keys)
-

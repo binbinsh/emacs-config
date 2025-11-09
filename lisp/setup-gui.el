@@ -147,6 +147,9 @@
   (which-key-posframe-mode 1))
 
 ;; Transient menus in a posframe (affects Magit/transient UIs)
+(unless (boundp 'transient-minimal-frame-width)
+  (defvar transient-minimal-frame-width 80
+    "Compatibility shim for packages expecting this transient variable."))
 (use-package transient-posframe
   :if (display-graphic-p)
   :after transient

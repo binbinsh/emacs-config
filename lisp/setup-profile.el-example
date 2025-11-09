@@ -11,6 +11,13 @@
 (setq user-mail-address "you@example.com")
 
 ;; ----------------------------------------------------------------------------
+;; Magit repository discovery roots (edit to match your workspace layout)
+;; ----------------------------------------------------------------------------
+
+(setq magit-repository-directories
+      (list (cons (expand-file-name "~/Projects/") 2)))
+
+;; ----------------------------------------------------------------------------
 ;; Terminal hosts (used by commands in setup-terminal.el)
 ;; ----------------------------------------------------------------------------
 ;; Structure of each host (plist):
