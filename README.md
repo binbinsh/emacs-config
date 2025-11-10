@@ -7,21 +7,24 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 ```
 
 ### Main features
-- **Global AI (beta)**: type a command and it will either execute returned Emacs Lisp or show info. Requires LM Studio API running locally.
-- **UI/UX**: `Monokai Pro Light` theme, JetBrainsMono Nerd Font + CJK/Emoji fonts, `doom-modeline` + `keycast`, tabs, smooth scrolling, line numbers, 120‑column indicator. Posframe UIs. Helpful/Eldoc‑Box hovers.
-- **Completion & search**: Vertico, Orderless, Marginalia, Consult (+ LSP), Embark, Corfu + Cape + popup info, kind‑icon.
-- **Diagnostics**: Flymake (built‑in) via LSP (Consult if available, else Flymake buffer).
-- **Explorer & files**: Dirvish sidebar and enhanced Dired (icons, git info, quick preview, two‑pane), `diff-hl` fringe highlights.
-- **Large files**: 64MB+ open via VLF chunks; soft wrap toggle available; highlighting optional.
-- **Language support**: 20+ languages with Tree-sitter syntax, LSP hooks, and smart navigation (symbols/definitions, ripgrep fallback).
-- **Terminal**: Integrated vterm panel toggle; terminal hub (SSH, remote Dired via TRAMP, tunnels); optional AI command suggestions via LM Studio.
-- **Git**: `C-c g` opens a Fork-style repo dashboard grouped by folders (TAB to fold/unfold); Magit command center (M-x `fork-git-command-center`) covers sync, commit/amend, branch/tag/remote/stash/submodule tools, Git-flow, optional Git LFS support, inline blame overlays, delta-enhanced diffs, AI commit assistant, and stashes surfaced in status.
-- **Python**: LSP (pyright), Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugging via `dap-mode`/debugpy.
-- **Markdown**: Auto live preview in a right split (xwidget‑webkit or EWW).
-- **LaTeX workspace**: `C-c l` launches a three-column view (explorer, editor, PDF preview) with auto TeX detection and save-to-refresh builds.
-- **Snippets**: Yasnippet with Consult-powered searchable selection, global activation, personal snippets in `~/.config/emacs/snippets/` (outside this repo).
-- **Clipboard & perf**: `simpleclip` clipboard integration; smoother GC via `gcmh`.
-- **Gmail with AI**: run `install-emacs.sh`, then `setup-gmail.sh you@gmail.com`; Gmail UI and AI helpers available after launch.
+
+| Area | Highlights | Shortcuts / extras |
+|------|------------|--------------------|
+| **Global AI (beta)** | Natural-language commands that either execute returned Emacs Lisp or surface inline guidance. | Requires LM Studio API running locally. |
+| **UI/UX** | `Monokai Pro Light`, JetBrainsMono Nerd Font, tabs, smooth scrolling, line numbers, 120-column guide, posframe UIs, Helpful/Eldoc-Box hovers. | `doom-modeline` + `keycast` always-on feedback. |
+| **Completion & search** | Vertico + Orderless + Marginalia stack, Consult (+ LSP), Embark, Corfu + Cape overlays, kind-icon hints. | Minibuffer-first workflow across Emacs. |
+| **Diagnostics** | Flymake via LSP (Consult if available, else Flymake buffer) for inline errors and quick lists. | `C-c !` opens diagnostics list. |
+| **Explorer & files** | Dirvish sidebar, Dired upgrades (icons, git info, two-pane preview), `diff-hl` fringe indicators. | `C-c e` toggles Dirvish instantly. |
+| **Large files** | VLF chunked viewer for 64MB+, quick soft-wrap toggle, optional highlighting to keep things snappy. | `C-c w` toggles soft wrap. |
+| **Language support** | 20+ Tree-sitter grammars, LSP hooks, symbol/definition jumps, ripgrep fallback for navigation. | Works on macOS + Ubuntu out of the box. |
+| **Terminal** | Integrated vterm panel, SSH/TRAMP hub, tunnel monitor, optional AI command suggestions. | `C-c v` toggles vterm, `C-c h` opens SSH hub. |
+| **Git** | Fork-style dashboard grouped by folders, Magit command center, Git-flow helpers, optional Git LFS, inline blame, delta diffs, AI commit assistant. | `C-c g` dashboard, `C-c B` inline blame. |
+| **Python** | Pyright LSP, Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugpy integration through `dap-mode`. | Tooling isolated through `uv`. |
+| **Markdown** | Right-split live preview via xwidget-webkit or EWW that refreshes as you type. | Automatic when editing `.md`. |
+| **LaTeX workspace** | `C-c l` launches three-column layout (explorer, editor, PDF) with auto TeX detection, save-to-refresh builds. | Purpose-built for academic workflows. |
+| **Snippets** | Yasnippet globally enabled with Consult-powered picker, personal library in `~/.config/emacs/snippets/`. | `C-c s` opens snippet selector. |
+| **Clipboard & perf** | `simpleclip` keeps macOS/Linux clipboards synced; `gcmh` smooths GC pauses. | Nice feel for huge buffers. |
+| **Gmail with AI** | Run `install-emacs.sh` then `setup-gmail.sh you@gmail.com` to unlock Gmail UI plus AI drafting/summarizing helpers. | Mail workspace available after setup. |
 
 
 ### Quick user manual
