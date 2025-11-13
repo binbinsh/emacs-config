@@ -4,8 +4,7 @@
 ;; You may delete these explanatory comments.
 (setq package-archives '(("gnu"    . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
                          ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
-                         ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-                         ("melpa-origin" . "https://melpa.org/packages/")))
+                         ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
 
 (setq use-package-compute-statistics t
       use-package-verbose t)
@@ -25,6 +24,9 @@
 
 ;; Set configs dir
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+
+;; Provide org helper functions early (e.g., svg-lib needs org-plist-delete)
+(require 'org-macs nil t)
 
 ;; Ensure ~/.local/bin is available (uv installs here on macOS/Linux)
 (let ((local-bin (expand-file-name "~/.local/bin")))

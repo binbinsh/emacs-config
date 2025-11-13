@@ -48,57 +48,6 @@
   :type 'string
   :group 'my-terminal)
 
-(defconst my/vterm-panel-buffer-name "vterm"
-  "Reserved name for the global vterm panel toggled via `C-c v'.")
-
-(defun my/vterm--rename-eligible-p (&optional buffer)
-  "Return non-nil when BUFFER should be auto-renamed by our vterm helpers."
-  (with-current-buffer (or buffer (current-buffer))
-    (and (derived-mode-p 'vterm-mode)
-         (not (string= (buffer-name) my/vterm-panel-buffer-name)))))
-
-(defun my/vterm--current-directory (&optional buffer)
-  "Return the best-effort directory string for BUFFER."
-  (with-current-buffer (or buffer (current-buffer))
-    (cond
-     ((and (fboundp 'vterm--get-pwd) (bound-and-true-p vterm--term))
-      (or (ignore-errors (vterm--get-pwd)) default-directory))
-     (t default-directory))))
-
-(defun my/vterm--abbreviate-path (path remote)
-  "Return a readable variant of PATH. REMOTE indicates remote paths."
-  (let ((clean (directory-file-name (or path ""))))
-    (cond
-     ((string-empty-p clean) "/")
-     ((and remote clean) clean)
-     ((fboundp 'abbreviate-file-name)
-      (abbreviate-file-name clean))
-     (t clean))))
-
-(defun my/vterm--format-buffer-name (&optional buffer)
-  "Build the desired buffer name for BUFFER based on directory/host."
-  (with-current-buffer (or buffer (current-buffer))
-    (let* ((dir (my/vterm--current-directory))
-           (remote-host (and dir (file-remote-p dir 'host)))
-           (remote-port (and dir (file-remote-p dir 'port)))
-           (remote-path (and dir (file-remote-p dir 'localname)))
-           (path (my/vterm--abbreviate-path (or remote-path dir) remote-host))
-           (host (or (and remote-host
-                          (if remote-port
-                              (format "%s#%s" remote-host remote-port)
-                            remote-host))
-                     (system-name)
-                     "localhost")))
-      (when (and path host)
-        (format "vterm: %s@%s" path host)))))
-
-(defun my/vterm--refresh-buffer-name (&rest _)
-  "Rename the current vterm buffer unless it is the fixed global panel."
-  (when (my/vterm--rename-eligible-p)
-    (when-let ((new-name (my/vterm--format-buffer-name)))
-      (unless (string= (buffer-name) new-name)
-        (rename-buffer new-name t)))))
-
 (use-package vterm
   :commands (vterm)
   :init
@@ -111,9 +60,7 @@
   ;; Ensure paste keys are handled by Emacs in vterm
   (when (boundp 'vterm-keymap-exceptions)
     (dolist (k '("s-v"))
-      (add-to-list 'vterm-keymap-exceptions k)))
-  (add-hook 'vterm-mode-hook #'my/vterm--refresh-buffer-name)
-  (advice-add 'vterm--set-directory :after #'my/vterm--refresh-buffer-name))
+      (add-to-list 'vterm-keymap-exceptions k))))
 
 (defun my/terminal--ensure-vterm ()
   "Ensure vterm is available. Return non-nil if ok."
@@ -174,6 +121,77 @@ Each profile supports keys:
 The structure is intentionally flexible and editable via customize."
   :type 'sexp
   :group 'my-terminal)
+
+(defcustom my/terminal-hosts-ssh-config (expand-file-name "~/.ssh/config")
+  "Path to the SSH config file used to derive `my/terminal-hosts'."
+  :type 'file
+  :group 'my-terminal)
+
+(defcustom my/terminal-hosts-auto-refresh t
+  "When non-nil, load host profiles from the SSH config during startup."
+  :type 'boolean
+  :group 'my-terminal)
+
+(defun my/terminal--ssh-config-file ()
+  "Return the absolute path to the SSH config used for host discovery."
+  (and my/terminal-hosts-ssh-config
+       (expand-file-name my/terminal-hosts-ssh-config)))
+
+(defun my/terminal--ssh-config-clean-value (value)
+  "Trim VALUE and strip surrounding quotes."
+  (when value
+    (let ((clean (string-trim value)))
+      (setq clean (string-trim clean "\"" "\""))
+      (setq clean (string-trim clean "'" "'"))
+      (string-trim clean))))
+
+(defun my/terminal--ssh-config-usable-host-name (name)
+  "Return non-nil when NAME is meaningful (no wildcards or negation)."
+  (let ((clean (my/terminal--ssh-config-clean-value name)))
+    (and clean
+         (not (string-empty-p clean))
+         (not (string-match-p "[*?]" clean))
+         (not (string-prefix-p "!" clean)))))
+
+(defun my/terminal-refresh-hosts-from-ssh-config (&optional quiet)
+  "Populate `my/terminal-hosts' from the configured SSH config file.
+When QUIET is non-nil, suppress status messages."
+  (interactive (list nil))
+  (let ((file (my/terminal--ssh-config-file)))
+    (cond
+     ((not (and file (file-readable-p file)))
+      (unless quiet
+        (message "SSH config %s not readable" (or file "unset"))))
+     ((not (require 'tramp nil t))
+      (unless quiet
+        (message "TRAMP not available; cannot read SSH hosts.")))
+     (t
+      (let* ((raw (tramp-parse-sconfig file))
+             (hosts (seq-uniq
+                     (delq nil
+                           (mapcar
+                            (lambda (entry)
+                              (let* ((host (and (consp entry) (cadr entry)))
+                                     (clean (my/terminal--ssh-config-clean-value host)))
+                                (when (my/terminal--ssh-config-usable-host-name clean)
+                                  (let* ((user (my/terminal--ssh-config-clean-value (car entry)))
+                                         (plist (list :name clean :host clean)))
+                                    (when (and user (not (string-empty-p user)))
+                                      (setq plist (plist-put plist :user user)))
+                                    plist))))
+                            raw))
+                     (lambda (a b)
+                       (string-equal (plist-get a :name)
+                                     (plist-get b :name))))))
+        (if (null hosts)
+            (unless quiet
+              (message "No SSH hosts found in %s" file))
+          (setq my/terminal-hosts hosts)
+          (unless quiet
+            (message "Loaded %d hosts from %s" (length hosts) file))))))))
+
+(when my/terminal-hosts-auto-refresh
+  (my/terminal-refresh-hosts-from-ssh-config t))
 
 (defun my/terminal--host-names ()
   (mapcar (lambda (h) (plist-get h :name)) my/terminal-hosts))
