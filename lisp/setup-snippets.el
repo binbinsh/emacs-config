@@ -9,6 +9,8 @@
 (require 'seq)
 (require 'subr-x)
 
+(declare-function my/terminal--buffer-name "setup-terminal" (&optional directory))
+
 (use-package yasnippet
   :init
   (let* ((private (expand-file-name "emacs/snippets" (expand-file-name "~/.config")))
@@ -108,8 +110,8 @@
                        (buffer-list))))
         (or visible
             mru
-           (let ((default-directory (expand-file-name "~"))
-                 (name (format "vterm-%s" (format-time-string "%Y%m%d-%H%M%S"))))
+           (let* ((default-directory (expand-file-name "~"))
+                  (name (my/terminal--buffer-name default-directory)))
               (vterm name)
               (current-buffer))))))))
 
@@ -174,5 +176,4 @@ Other snippets: expand at point (or paste into vterm)."
 (provide 'setup-snippets)
 
 ;;; setup-snippets.el ends here
-
 

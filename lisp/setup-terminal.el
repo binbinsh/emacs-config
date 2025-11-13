@@ -8,6 +8,7 @@
 (require 'seq)
 (require 'subr-x) ;; string-join, string-trim, string-remove-suffix
 (require 'cl-lib)
+(require 'tramp)
 ;; Load AI helpers only when needed to avoid startup overhead
 (autoload 'my/ai-suggest-shell "setup-ai" nil t)
 ;; Reuse existing vterm selection helper from snippets module
@@ -60,7 +61,8 @@
   ;; Ensure paste keys are handled by Emacs in vterm
   (when (boundp 'vterm-keymap-exceptions)
     (dolist (k '("s-v"))
-      (add-to-list 'vterm-keymap-exceptions k))))
+      (add-to-list 'vterm-keymap-exceptions k)))
+  (advice-add 'vterm--set-directory :after #'my/terminal--refresh-buffer-name))
 
 (defun my/terminal--ensure-vterm ()
   "Ensure vterm is available. Return non-nil if ok."
@@ -68,13 +70,72 @@
        (or (featurep 'vterm)
            (require 'vterm nil t))))
 
+(defvar-local my/terminal--static-name nil
+  "When non-nil, vterm buffer renaming is disabled for this buffer.")
+
+(defun my/terminal--buffer-name (&optional directory)
+  "Return canonical vterm buffer name for DIRECTORY.
+When DIRECTORY is nil, fall back to `default-directory' or HOME."
+  (let* ((raw (or directory default-directory "~"))
+         (remote (file-remote-p raw))
+         (path nil)
+         (host nil))
+    (if remote
+        (let* ((vec (ignore-errors (tramp-dissect-file-name raw)))
+               (local (or (and vec (tramp-file-name-localname vec)) raw))
+               (remote-host (and vec (tramp-file-name-host vec))))
+          (setq path (my/terminal--normalize-path local nil))
+          (setq host (or (my/terminal--short-host remote-host)
+                         (my/terminal--short-host (and (fboundp 'system-name)
+                                                       (system-name))))))
+      (setq path (my/terminal--normalize-path raw t))
+      (setq host (my/terminal--short-host (and (fboundp 'system-name)
+                                               (system-name)))))
+    (format "vterm: %s@%s"
+            (or path "~")
+            (or host "localhost"))))
+
+(defun my/terminal--normalize-path (path abbreviate)
+  "Return PATH without trailing slash; abbreviate when ABBREVIATE is non-nil."
+  (when path
+    (let* ((as-dir (file-name-as-directory path))
+           (clean (directory-file-name as-dir)))
+      (unless (or (string-prefix-p "/" clean)
+                  (string-prefix-p "~" clean))
+        (setq clean (concat "/" clean)))
+      (if abbreviate
+          (abbreviate-file-name clean)
+        clean))))
+
+(defun my/terminal--short-host (host)
+  "Return HOST without domain suffix; fallback to HOST when splitting fails."
+  (when host
+    (let ((short (car (split-string host "\\."))))
+      (if (and short (> (length short) 0))
+          short
+        host))))
+
+(defun my/terminal--rename-buffer (&optional directory)
+  "Rename the current vterm buffer using DIRECTORY or `default-directory'."
+  (when (and (derived-mode-p 'vterm-mode)
+             (not (and (boundp 'my/terminal--static-name)
+                       my/terminal--static-name)))
+    (let* ((target (my/terminal--buffer-name directory))
+           (current (buffer-name)))
+      (unless (string-equal current target)
+        (rename-buffer target t)))))
+
+(defun my/terminal--refresh-buffer-name (&rest _)
+  "Update vterm buffer name after OSC-7 directory sync."
+  (my/terminal--rename-buffer))
+
 (defun my/terminal-open ()
   "Open a new terminal session using the configured backend."
   (interactive)
   (cond
    ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
     (let ((vterm-shell my/terminal-shell))
-      (vterm (format "vterm-%s" (format-time-string "%Y%m%d-%H%M%S")))))
+      (vterm (my/terminal--buffer-name))))
    (t (message "No supported terminal backend available."))))
 
 (defun my/terminal-open-here (&optional directory)
@@ -85,12 +146,13 @@
      ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
       (let ((default-directory dir)
             (vterm-shell my/terminal-shell))
-        (vterm (format "vterm-%s" (format-time-string "%Y%m%d-%H%M%S")))))
+        (vterm (my/terminal--buffer-name dir))))
      (t (message "No supported terminal backend available.")))))
 
 (defun my/terminal-open-named (name)
   "Open a terminal buffer with NAME using the configured backend."
-  (interactive "sTerminal name: ")
+  (interactive (let ((default (my/terminal--buffer-name)))
+                 (list (read-string "Terminal name: " default nil nil default))))
   (cond
    ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
     (let ((vterm-shell my/terminal-shell))
@@ -99,7 +161,7 @@
 
 ;; Find or create a vterm in the current frame, preferring the current buffer
 ;; if it's already a vterm. Otherwise reuse a visible vterm window in this
-;; frame, or create a uniquely named one with a timestamp.
+;; frame, or create a canonical name based on directory/hostname.
 
 ;; ----------------------------------------------------------------------------
 ;; Host profiles and SSH / TRAMP helpers

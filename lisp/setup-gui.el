@@ -405,8 +405,17 @@
              (new-win (split-window (selected-window) (- target-lines) 'below)))
         (select-window new-win)
         (if (buffer-live-p buf)
-            (switch-to-buffer buf)
-          (vterm name))))))
+            (progn
+              (switch-to-buffer buf)
+              (with-current-buffer buf
+                (when (boundp 'my/terminal--static-name)
+                  (setq-local my/terminal--static-name t))))
+          (progn
+            (vterm name)
+            (when-let ((fresh (get-buffer name)))
+              (with-current-buffer fresh
+                (when (boundp 'my/terminal--static-name)
+                  (setq-local my/terminal--static-name t))))))))))
 
 ;; Keybindings moved to the unified Command leader (see setup-keys.el)
 
