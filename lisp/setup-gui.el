@@ -33,6 +33,19 @@
 
 ;; Fonts (optimize English + Chinese)
 (require 'cl-lib)
+
+(eval-when-compile
+  (declare-function cape-keyword "cape-keyword")
+  (declare-function consult-register-format "consult-register")
+  (declare-function consult-register-window "consult-register")
+  (declare-function consult-xref "consult-xref")
+  (declare-function corfu-popupinfo-mode "corfu-popupinfo")
+  (declare-function diff-hl-dired-mode "diff-hl-dired")
+  (declare-function keycast-mode "setup-gui")
+  (declare-function my/dirvish-project-root "setup-gui")
+  (declare-function my/ensure-explorer-on-new-tab "setup-gui")
+  (declare-function vterm "vterm"))
+
 (defun my/find-first-font (fonts)
   (cl-find-if (lambda (f) (find-font (font-spec :name f))) fonts))
 
