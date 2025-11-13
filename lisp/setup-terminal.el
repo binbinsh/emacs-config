@@ -48,6 +48,57 @@
   :type 'string
   :group 'my-terminal)
 
+(defconst my/vterm-panel-buffer-name "vterm"
+  "Reserved name for the global vterm panel toggled via `C-c v'.")
+
+(defun my/vterm--rename-eligible-p (&optional buffer)
+  "Return non-nil when BUFFER should be auto-renamed by our vterm helpers."
+  (with-current-buffer (or buffer (current-buffer))
+    (and (derived-mode-p 'vterm-mode)
+         (not (string= (buffer-name) my/vterm-panel-buffer-name)))))
+
+(defun my/vterm--current-directory (&optional buffer)
+  "Return the best-effort directory string for BUFFER."
+  (with-current-buffer (or buffer (current-buffer))
+    (cond
+     ((and (fboundp 'vterm--get-pwd) (bound-and-true-p vterm--term))
+      (or (ignore-errors (vterm--get-pwd)) default-directory))
+     (t default-directory))))
+
+(defun my/vterm--abbreviate-path (path remote)
+  "Return a readable variant of PATH. REMOTE indicates remote paths."
+  (let ((clean (directory-file-name (or path ""))))
+    (cond
+     ((string-empty-p clean) "/")
+     ((and remote clean) clean)
+     ((fboundp 'abbreviate-file-name)
+      (abbreviate-file-name clean))
+     (t clean))))
+
+(defun my/vterm--format-buffer-name (&optional buffer)
+  "Build the desired buffer name for BUFFER based on directory/host."
+  (with-current-buffer (or buffer (current-buffer))
+    (let* ((dir (my/vterm--current-directory))
+           (remote-host (and dir (file-remote-p dir 'host)))
+           (remote-port (and dir (file-remote-p dir 'port)))
+           (remote-path (and dir (file-remote-p dir 'localname)))
+           (path (my/vterm--abbreviate-path (or remote-path dir) remote-host))
+           (host (or (and remote-host
+                          (if remote-port
+                              (format "%s#%s" remote-host remote-port)
+                            remote-host))
+                     (system-name)
+                     "localhost")))
+      (when (and path host)
+        (format "vterm: %s@%s" path host)))))
+
+(defun my/vterm--refresh-buffer-name (&rest _)
+  "Rename the current vterm buffer unless it is the fixed global panel."
+  (when (my/vterm--rename-eligible-p)
+    (when-let ((new-name (my/vterm--format-buffer-name)))
+      (unless (string= (buffer-name) new-name)
+        (rename-buffer new-name t)))))
+
 (use-package vterm
   :commands (vterm)
   :init
@@ -60,7 +111,9 @@
   ;; Ensure paste keys are handled by Emacs in vterm
   (when (boundp 'vterm-keymap-exceptions)
     (dolist (k '("s-v"))
-      (add-to-list 'vterm-keymap-exceptions k))))
+      (add-to-list 'vterm-keymap-exceptions k)))
+  (add-hook 'vterm-mode-hook #'my/vterm--refresh-buffer-name)
+  (advice-add 'vterm--set-directory :after #'my/vterm--refresh-buffer-name))
 
 (defun my/terminal--ensure-vterm ()
   "Ensure vterm is available. Return non-nil if ok."
