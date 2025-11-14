@@ -95,6 +95,13 @@ When DIRECTORY is nil, fall back to `default-directory' or HOME."
             (or path "~")
             (or host "localhost"))))
 
+(defun my/terminal--local-default-directory ()
+  "Return a local directory path suitable for spawning new terminals."
+  (or (and default-directory
+           (not (file-remote-p default-directory))
+           default-directory)
+      (expand-file-name "~")))
+
 (defun my/terminal--normalize-path (path abbreviate)
   "Return PATH without trailing slash; abbreviate when ABBREVIATE is non-nil."
   (when path
@@ -134,8 +141,10 @@ When DIRECTORY is nil, fall back to `default-directory' or HOME."
   (interactive)
   (cond
    ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
-    (let ((vterm-shell my/terminal-shell))
-      (vterm (my/terminal--buffer-name))))
+    (let* ((dir (my/terminal--local-default-directory))
+           (default-directory dir)
+           (vterm-shell my/terminal-shell))
+      (vterm (my/terminal--buffer-name dir))))
    (t (message "No supported terminal backend available."))))
 
 (defun my/terminal-open-here (&optional directory)
@@ -151,11 +160,14 @@ When DIRECTORY is nil, fall back to `default-directory' or HOME."
 
 (defun my/terminal-open-named (name)
   "Open a terminal buffer with NAME using the configured backend."
-  (interactive (let ((default (my/terminal--buffer-name)))
+  (interactive (let* ((dir (my/terminal--local-default-directory))
+                      (default (my/terminal--buffer-name dir)))
                  (list (read-string "Terminal name: " default nil nil default))))
   (cond
    ((and (eq my/terminal-backend 'vterm) (my/terminal--ensure-vterm))
-    (let ((vterm-shell my/terminal-shell))
+    (let* ((dir (my/terminal--local-default-directory))
+           (default-directory dir)
+           (vterm-shell my/terminal-shell))
       (vterm name)))
    (t (message "No supported terminal backend available."))))
 
