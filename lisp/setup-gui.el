@@ -7,9 +7,9 @@
   ;; Extend upstream theme with a hand-rolled light palette.
   (let ((theme-dir (expand-file-name "lisp" user-emacs-directory)))
     (add-to-list 'custom-theme-load-path theme-dir)
-    (unless (custom-theme-p 'monokai-pro-light)
-      (load (expand-file-name "monokai-pro-light-theme.el" theme-dir) nil t)))
-  (load-theme 'monokai-pro-light t))
+    (unless (custom-theme-p 'monokai-light)
+      (load (expand-file-name "monokai-light-theme.el" theme-dir) nil t)))
+  (load-theme 'monokai-light t))
 
 ;; Frame behavior and size
 (setq frame-resize-pixelwise t)
