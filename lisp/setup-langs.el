@@ -12,6 +12,19 @@
 
   ;; Don't warn when no LSP clients are found
   (setq lsp-warn-no-matched-clients nil)
+
+  ;; Ensure we search our local grammar dir first
+  (setq treesit-extra-load-path
+        (list (expand-file-name "tree-sitter" user-emacs-directory)))
+
+  ;; Emacs 29/30 ship tree-sitter with LANGUAGE_VERSION 14; the latest upstream
+  ;; python grammar is generated with LANGUAGE_VERSION 15, which triggers the
+  ;; "version-mismatch: 15" warning. Pin to the newest release still using 14.
+  (setq treesit-language-source-alist
+        (let ((alist treesit-language-source-alist))
+          (setf (alist-get 'python alist)
+                '("https://github.com/tree-sitter/tree-sitter-python" "v0.23.6"))
+          alist))
   
   ;; Prefer tree-sitter majors where possible
   (dolist (pair '((c-mode . c-ts-mode)
@@ -153,5 +166,3 @@
   (add-hook 'clojure-mode-hook #'lsp-deferred))
 
 (provide 'setup-langs)
-
-
