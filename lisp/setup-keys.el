@@ -125,7 +125,7 @@
 (global-set-key (kbd "C-c /") #'consult-ripgrep)
 (global-set-key (kbd "C-c b") #'consult-buffer)
 (global-set-key (kbd "C-c p") #'project-find-file)
-(global-set-key (kbd "C-c m") #'my/notmuch-open-gmail-ui)
+(global-set-key (kbd "C-c m") #'set-mark-command)
 (global-set-key (kbd "C-c o") #'find-file)
 (global-set-key (kbd "C-c h") #'my/terminal-ssh-connect)
 (global-set-key (kbd "C-c r") #'my/terminal-remote-dired)
@@ -228,40 +228,5 @@
 
 (add-to-list 'emulation-mode-map-alists 'my/ai--emulation-alist)
 (my/ai-override-mode 1)
-
-;; Notmuch: Gmail-like bindings and AI helpers
-(with-eval-after-load 'notmuch
-  (let ((map notmuch-search-mode-map))
-    ;; Archive and star in search view
-    (define-key map (kbd "e") (lambda () (interactive) (notmuch-search-tag (list "-inbox"))))
-    (define-key map (kbd "*") (lambda () (interactive) (notmuch-search-tag (list "+flagged"))))
-    ;; Quick jumps
-    (define-key map (kbd "g i") (lambda () (interactive) (notmuch-search "tag:inbox and not tag:trash and not tag:spam")))
-    (define-key map (kbd "g a") (lambda () (interactive) (notmuch-search "*")))))
-
-(with-eval-after-load 'notmuch-show
-  (let ((map notmuch-show-mode-map))
-    ;; Archive and star in show view
-    (define-key map (kbd "e") (lambda () (interactive) (notmuch-show-tag (list "-inbox"))))
-    (define-key map (kbd "*") (lambda () (interactive) (notmuch-show-tag (list "+flagged"))))))
-
-;; AI helpers in search (single key)
-(with-eval-after-load 'notmuch
-  (define-key notmuch-search-mode-map (kbd "l") #'my/notmuch-ai-suggest-labels)
-  (define-key notmuch-search-mode-map (kbd "s") #'my/notmuch-ai-summarize-thread)
-  (define-key notmuch-search-mode-map (kbd "r") #'my/notmuch-ai-generate-reply))
-
-;; AI helpers in WebKit view (single key)
-(with-eval-after-load 'xwidget
-  (when (boundp 'xwidget-webkit-mode-map)
-    (define-key xwidget-webkit-mode-map (kbd "l") #'my/notmuch-ai-suggest-labels)
-    (define-key xwidget-webkit-mode-map (kbd "s") #'my/notmuch-ai-summarize-thread)
-    (define-key xwidget-webkit-mode-map (kbd "r") #'my/notmuch-ai-generate-reply)))
-
-;; AI helpers in notmuch-show (single key), for fallback when not using WebKit
-(with-eval-after-load 'notmuch-show
-  (define-key notmuch-show-mode-map (kbd "l") #'my/notmuch-ai-suggest-labels)
-  (define-key notmuch-show-mode-map (kbd "s") #'my/notmuch-ai-summarize-thread)
-  (define-key notmuch-show-mode-map (kbd "r") #'my/notmuch-ai-generate-reply))
 
 (provide 'setup-keys)
