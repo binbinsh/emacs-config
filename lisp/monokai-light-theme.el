@@ -3,21 +3,21 @@
 (require 'monokai-pro-theme)
 
 (defvar monokai-light-theme-colors
-  '(;; Background / foreground (ported from the Monokai Light tmTheme)
-    :bg     "#ffffff"
-    :bg+1   "#f5f5f5"
-    :bg+2   "#ededed"
-    :fg-4   "#d8d8d8"
-    :fg-3   "#9f9f8f"
-    :fg-2   "#7b7b73"
-    :fg-1   "#404040"
-    :fg     "#000000"
+  '(;; Background / foreground tuned for bright terminals (e.g., Termius Tokyo Day)
+    :bg     "#f8f9fb"
+    :bg+1   "#e8edf5"
+    :bg+2   "#d6e3f5"
+    :fg-4   "#c5cedc"
+    :fg-3   "#7a8294"
+    :fg-2   "#636b7a"
+    :fg-1   "#2b303b"
+    :fg     "#0f172a"
 
     ;; Accent colors
     :white  "#ffffff"
     :red    "#cd3704"
     :orange "#f25a00"
-    :yellow "#ffe792"
+    :yellow "#b15c00"  ;; darken yellow so strings/read highlights pop on light bg
     :green  "#6aaf19"
     :blue   "#28c6e4"
     :cyan   "#0089b3"
