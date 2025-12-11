@@ -17,14 +17,31 @@
   (setq treesit-extra-load-path
         (list (expand-file-name "tree-sitter" user-emacs-directory)))
 
-  ;; Emacs 29/30 ship tree-sitter with LANGUAGE_VERSION 14; the latest upstream
-  ;; python grammar is generated with LANGUAGE_VERSION 15, which triggers the
-  ;; "version-mismatch: 15" warning. Pin to the newest release still using 14.
+  ;; Emacs 29/30 ship tree-sitter with LANGUAGE_VERSION 14; newer grammar
+  ;; releases (v0.24/v0.25) are generated with LANGUAGE_VERSION 15, which
+  ;; triggers "language-version-mismatch" errors. Pin grammars to the newest
+  ;; releases still on 14 (or the latest compatible release when a grammar is
+  ;; still on 13).
   (setq treesit-language-source-alist
-        (let ((alist treesit-language-source-alist))
-          (setf (alist-get 'python alist)
-                '("https://github.com/tree-sitter/tree-sitter-python" "v0.23.6"))
-          alist))
+        (let ((alist treesit-language-source-alist)
+              (v14-pins
+               '((bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.23.3")
+                 (c "https://github.com/tree-sitter/tree-sitter-c" "v0.23.6")
+                 (cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.23.4")
+                 (css "https://github.com/tree-sitter/tree-sitter-css" "v0.23.2")
+                 (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.23.1")
+                 (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "typescript/src")
+                 (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
+                 (python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")
+                 (json "https://github.com/tree-sitter/tree-sitter-json" "v0.24.8")
+                 (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")
+                 (go "https://github.com/tree-sitter/tree-sitter-go" "v0.23.4")
+                 (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.23.3")
+                 (java "https://github.com/tree-sitter/tree-sitter-java" "v0.23.5")
+                 (cmake "https://github.com/uyha/tree-sitter-cmake" "v0.7.2")
+                 (lua "https://github.com/Azganoth/tree-sitter-lua" "v2.1.3"))))
+          (dolist (entry v14-pins alist)
+            (setf (alist-get (car entry) alist) (cdr entry)))))
   
   ;; Prefer tree-sitter majors where possible
   (dolist (pair '((c-mode . c-ts-mode)
