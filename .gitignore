@@ -1,6 +1,5 @@
 .venv/
-.DS_Store
 elpa/
 tree-sitter/
 custom.el
-lisp/setup-profile.el
+

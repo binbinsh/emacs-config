@@ -1,60 +1,110 @@
 # Emacs Config (macOS + Ubuntu)
 
-### Quick install
+A modern, fast Emacs configuration with async loading, LSP support, and VSCode-like UX.
+
+## Quick Install
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/main/install-emacs.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/main/bootstrap.sh)"
 ```
 
-### Main features
+## Features
 
-| Area | Highlights | Shortcuts / extras |
-|------|------------|--------------------|
-| **Global AI (beta)** | Natural-language commands that either execute returned Emacs Lisp or surface inline guidance. | Requires LM Studio API running locally. |
-| **UI/UX** | `Monokai Pro Light`, JetBrainsMono Nerd Font, tabs, smooth scrolling, line numbers, 120-column guide, posframe UIs, Helpful/Eldoc-Box hovers. | `doom-modeline` + `keycast` always-on feedback. |
-| **Completion & search** | Vertico + Orderless + Marginalia stack, Consult (+ LSP), Embark, Corfu + Cape overlays, kind-icon hints. | Minibuffer-first workflow across Emacs. |
-| **Diagnostics** | Flymake via LSP (Consult if available, else Flymake buffer) for inline errors and quick lists. | `C-c !` opens diagnostics list. |
-| **Explorer & files** | Dirvish sidebar, Dired upgrades (icons, git info, two-pane preview), `diff-hl` fringe indicators. | `C-c e` toggles Dirvish instantly. |
-| **Large files** | VLF chunked viewer for 64MB+, quick soft-wrap toggle, optional highlighting to keep things snappy. | `C-c w` toggles soft wrap. |
-| **Language support** | 20+ Tree-sitter grammars, LSP hooks, symbol/definition jumps, ripgrep fallback for navigation. | Works on macOS + Ubuntu out of the box. |
-| **Terminal** | Integrated vterm panel, SSH/TRAMP hub, tunnel monitor, optional AI command suggestions. | `C-c v` toggles vterm, `C-c h` opens SSH hub. |
-| **Git** | Fork-style dashboard grouped by folders, Magit command center, Git-flow helpers, optional Git LFS, inline blame, delta diffs, AI commit assistant. | `C-c g` dashboard, `C-c B` inline blame. |
-| **Python** | Pyright LSP, Ruff LSP via `uv run`, format + organize imports on save, pytest via `uv run`, debugpy integration through `dap-mode`. | Tooling isolated through `uv`. |
-| **Markdown** | Right-split live preview via xwidget-webkit or EWW that refreshes as you type. | Automatic when editing `.md`. |
-| **LaTeX workspace** | `C-c l` launches three-column layout (explorer, editor, PDF) with auto TeX detection, save-to-refresh builds. | Purpose-built for academic workflows. |
-| **Snippets** | Yasnippet globally enabled with Consult-powered picker, personal library in `~/.config/emacs/snippets/`. | `C-c s` opens snippet selector. |
-| **Clipboard & perf** | `simpleclip` keeps macOS/Linux clipboards synced; `gcmh` smooths GC pauses. | Nice feel for huge buffers. |
-| **Gmail with AI** | Run `install-emacs.sh` then `setup-gmail.sh you@gmail.com` to unlock Gmail UI plus AI drafting/summarizing helpers. | Mail workspace available after setup. |
+| Area | Highlights |
+|------|------------|
+| **Performance** | Async loading via `post-init.el`, native compilation, `gcmh` for smooth GC, fast startup |
+| **UI/UX** | Monokai Light theme, JetBrainsMono Nerd Font, tabs, smooth scrolling, line numbers, 120-column guide, posframe UIs |
+| **Modeline** | `doom-modeline` + `keycast` always-on feedback |
+| **Completion** | Vertico + Orderless + Marginalia + Consult + Embark + Corfu + Cape + kind-icon |
+| **Diagnostics** | Flymake via LSP for inline errors. `C-c !` opens diagnostics list |
+| **Explorer** | Dirvish sidebar with vscode-icon, two-pane mode, quick preview |
+| **Terminal** | Integrated vterm terminal panel with TRAMP/SSH support |
+| **Git** | Magit, gitflow, inline blame (blamer), delta diffs, diff-hl gutter |
+| **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
+| **Python** | Pyright LSP, Ruff, format + organize imports on save, pytest via `uv run`, debugpy/dap-mode |
+| **Bash** | bash-language-server LSP, tree-sitter syntax highlighting |
+| **Markdown** | Live preview, syntax highlighting, pandoc integration |
+| **LaTeX** | AUCTeX with SyncTeX, doc-view PDF preview |
+| **Clipboard** | `simpleclip` keeps macOS/Linux clipboards synced |
 
+## Structure
 
-### Quick user manual
+```
+~/.emacs.d/
+├── early-init.el           # Pre-GUI: GC tuning, UI chrome, package archives (China mirrors)
+├── init.el                 # Minimal sync setup, theme, fonts, async trigger
+├── post-init.el            # All features load async via idle timer
+├── bootstrap.sh            # One-command installer (deps, fonts, grammars, LSP)
+├── monokai-light-theme.el  # Custom light theme
+├── tree-sitter/            # Pre-compiled grammar libraries (pinned versions)
+└── .venv/                  # Python virtual environment (created by bootstrap.sh)
+```
 
-Global and mode-specific actions use `C-c` single keys.
+## What bootstrap.sh Installs
 
-Global shortcuts
+**macOS (via Homebrew):**
+- emacs-plus (symlinked to /Applications)
+- git, ripgrep, fd, cmake, pkg-config, libtool, git-delta
+- JetBrainsMono Nerd Font, Symbols Nerd Font Mono
 
-| Key   | Action |
-|-------|--------|
+**Ubuntu (via apt):**
+- emacs, git, ripgrep, fd-find, cmake, build-essential
+- Noto fonts (CJK, emoji)
+- JetBrainsMono Nerd Font, Symbols Nerd Font (downloaded)
+
+**Cross-platform:**
+- uv (Python package manager)
+- bash-language-server (via npm)
+- Tree-sitter grammars (compiled with pinned versions for stability)
+- Python tooling: ruff, ruff-lsp, pyright, debugpy, pytest, black
+
+## Keybindings
+
+### Global shortcuts
+
+| Key | Action |
+|-----|--------|
 | `C-c e` | Focus/toggle Dirvish sidebar |
 | `C-c /` | Ripgrep search |
 | `C-c b` | Switch buffers |
 | `C-c p` | Project files |
+| `C-c o` | Open file |
 | `C-c j` | Symbols (imenu) |
 | `C-c d` | Go to definition |
-| `C-c r` | Remote Dired (TRAMP) |
-| `C-c !` | List diagnostics (consult-flymake) |
-| `C-c v` | Toggle vterm panel |
-| `C-c h` | SSH (terminal hub) |
-| `C-c g` | Fork Git repo dashboard (folder groups, TAB to fold/unfold) |
+| `C-c !` | List diagnostics |
+| `C-c v` | Toggle terminal panel |
+| `C-c g` | Git repo dashboard |
 | `C-c y` | Show inline commit info |
-| `C-c l` | Open LaTeX workspace (explorer + editor + PDF preview) |
-| `C-c B` | Toggle inline blame |
-| `C-c s` | Global snippet selector (shell snippets go to vterm) |
-| `C-c a` | Global AI assistant (requires local LM Studio) |
-| `C-c w` | Toggle soft wrap (useful for very large files) |
-| `C-c m` | Open Gmail three‑pane UI |
+| `C-c u` | Undo tree (vundo) |
+| `C-c w` | Toggle soft wrap |
+| `C-c [` | Previous tab |
+| `C-c ]` | Next tab |
+| `C-c n` | New tab |
+| `C-c x` | Close tab |
+| `C-c B` | Project compile |
 
-Mode-specific shortcuts
+### Git hunk navigation
+
+| Key | Action |
+|-----|--------|
+| `C-c [h` | Previous hunk |
+| `C-c ]h` | Next hunk |
+| `C-c =` | Show hunk diff |
+
+### macOS shortcuts (Cmd key)
+
+| Key | Action |
+|-----|--------|
+| `s-F` | Project-wide search (ripgrep) |
+| `s-P` | Command palette (M-x) |
+| `s-p` | Project find file |
+| `s-b` | Toggle explorer |
+| `s-`` ` | Toggle terminal |
+| `s-E` | Focus explorer |
+| `s-G` | Magit status |
+| `s-d` | Mark next like this (multiple cursors) |
+
+### Mode-specific shortcuts
 
 | Mode | Key | Action |
 |------|-----|--------|
@@ -64,16 +114,33 @@ Mode-specific shortcuts
 | Dired/Dirvish | `+` | Create directory |
 | Dired/Dirvish | `D` | Delete |
 | Dired/Dirvish | `TAB` | Switch pane |
-| vterm | `C-c h` | SSH connect (host profiles) |
-| vterm | `C-c r` | Remote Dired (TRAMP) |
-| vterm | `C-c t` | List SSH tunnels |
-| vterm | `C-c s` | Snippet selector (shell to vterm) |
 | LSP | `C-c r` | Find references |
 | LSP | `C-c .` | Code action |
 | LSP | `C-c f` | Format buffer |
 | LSP | `C-c i` | Organize imports |
-| Notmuch (search/show) | `e` | Archive |
-| Notmuch (search/show) | `*` | Star |
-| Notmuch (search/show) | `l` | AI: suggest labels |
-| Notmuch (search/show) | `r` | AI: draft reply |
-| Notmuch (search/show) | `s` | AI: summarize thread |
+| Python | `C-c t` | Run pytest |
+| Markdown | `C-c l` | Live preview |
+| Magit | `C-c b` | Branch graph |
+| Magit | `C-c h` | File history |
+| Magit | `C-c B` | Toggle blame |
+
+## Dependencies
+
+### Required
+- Emacs 29+ (for tree-sitter support)
+- git, ripgrep
+
+### Optional
+- Node.js + npm (for bash-language-server)
+- pandoc (for markdown preview)
+- delta (for better git diffs)
+
+## Cache Location
+
+All temporary files go to `~/.cache/emacs/` (XDG compliant):
+- auto-save, backups, eln-cache, lsp, tramp, dirvish, svg-lib, transient, etc.
+
+## Package Archives
+
+Uses China mirrors (TUNA) for faster package downloads:
+- GNU ELPA, NonGNU ELPA, MELPA

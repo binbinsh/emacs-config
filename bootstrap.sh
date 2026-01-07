@@ -32,11 +32,11 @@ install_macos() {
     [ -d "/usr/local/bin" ] && ensure_path "/usr/local/bin"
   fi
 
-  # Install Emacs with xwidgets (WebKit) via emacs-plus tap
+  # Install Emacs via emacs-plus tap
   brew tap d12frosted/emacs-plus >/dev/null 2>&1 || true
   if ! brew list emacs-plus >/dev/null 2>&1; then
-    info "Installing emacs-plus with xwidgets and custom icon"
-    brew install emacs-plus --with-xwidgets --with-savchenkovaleriy-big-sur-3d-icon || warn "Failed to install emacs-plus with xwidgets and icon"
+    info "Installing emacs-plus"
+    brew install emacs-plus || warn "Failed to install emacs-plus"
   else
     info "emacs-plus already installed"
   fi
@@ -52,9 +52,6 @@ install_macos() {
   else
     warn "Emacs.app not found under emacs-plus prefix; skip /Applications symlink"
   fi
-
-  # Mail tooling
-  brew install notmuch || true
 
   # CLI deps
   brew install git ripgrep fd cmake pkg-config libtool git-delta || true
@@ -82,7 +79,7 @@ install_ubuntu() {
   fi
   sudo apt update -y
   sudo apt install -y \
-    emacs notmuch libnotmuch-dev git ripgrep fd-find cmake build-essential pkg-config libtool-bin \
+    emacs git ripgrep fd-find cmake build-essential pkg-config libtool-bin \
     libvterm-dev xclip curl unzip fontconfig fonts-noto fonts-noto-cjk fonts-noto-color-emoji
 
   # Provide `fd` alias if only fdfind exists
@@ -133,24 +130,51 @@ install_uv() {
   log "uv ready: $(uv --version || true)"
 }
 
-install_lieer() {
-  info "Installing lieer (gmi) via uv tool"
-  # Ensure uv exists and on PATH
-  install_uv
-  # Install or upgrade lieer (places entrypoints in ~/.local/bin)
-  uv tool install --upgrade lieer || uv tool install lieer
-  ensure_path "$HOME/.local/bin"
-  log "gmi ready: $(gmi -h || true)"
+install_bash_lsp() {
+  info "Installing bash-language-server"
+  if have npm; then
+    npm install -g bash-language-server || warn "Failed to install bash-language-server via npm"
+    log "bash-language-server ready: $(bash-language-server --version 2>/dev/null || echo 'installed')"
+  else
+    warn "npm not found. Install Node.js to enable bash-language-server."
+    warn "  macOS: brew install node"
+    warn "  Ubuntu: sudo apt install nodejs npm"
+  fi
 }
 
 ensure_repo() {
   if [ -d "$REPO_DIR/.git" ]; then
-    info "Updating existing repo at $REPO_DIR"
-    git -C "$REPO_DIR" pull --ff-only || true
+    info "Repo already exists at $REPO_DIR"
   else
     info "Cloning repo to $REPO_DIR"
     git clone "$REPO_URL" "$REPO_DIR"
   fi
+}
+
+setup_treesitter() {
+  info "Pre-compiling tree-sitter grammars"
+  TS_DIR="$REPO_DIR/tree-sitter"
+  mkdir -p "$TS_DIR"
+
+  # Use Emacs batch mode to compile all grammars
+  emacs --batch --eval "(progn
+    (setq treesit-extra-load-path '(\"$TS_DIR\"))
+    (setq treesit-language-source-alist
+          '((bash \"https://github.com/tree-sitter/tree-sitter-bash\" \"v0.23.3\")
+            (python \"https://github.com/tree-sitter/tree-sitter-python\" \"v0.23.6\")
+            (javascript \"https://github.com/tree-sitter/tree-sitter-javascript\" \"v0.23.1\")
+            (typescript \"https://github.com/tree-sitter/tree-sitter-typescript\" \"v0.23.2\" \"typescript/src\")
+            (tsx \"https://github.com/tree-sitter/tree-sitter-typescript\" \"v0.23.2\" \"tsx/src\")
+            (json \"https://github.com/tree-sitter/tree-sitter-json\" \"v0.24.8\")
+            (go \"https://github.com/tree-sitter/tree-sitter-go\" \"v0.23.4\")
+            (rust \"https://github.com/tree-sitter/tree-sitter-rust\" \"v0.23.3\")))
+    (dolist (lang (mapcar #'car treesit-language-source-alist))
+      (unless (treesit-language-available-p lang)
+        (message \"Compiling grammar: %s\" lang)
+        (treesit-install-language-grammar lang \"$TS_DIR\")))
+    (message \"Tree-sitter grammars ready\"))" 2>&1 || warn "Some grammars may have failed to compile"
+
+  log "Tree-sitter grammars compiled to $TS_DIR"
 }
 
 setup_python() {
@@ -176,8 +200,9 @@ main() {
     *) err "Unsupported OS: $OS"; exit 1 ;;
   esac
   install_uv
-  install_lieer
+  install_bash_lsp
   ensure_repo
+  setup_treesitter
   setup_python
 
   cat <<'EOF'
