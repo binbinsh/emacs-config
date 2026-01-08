@@ -80,7 +80,7 @@ install_ubuntu() {
   sudo apt update -y
   sudo apt install -y \
     emacs git ripgrep fd-find cmake build-essential pkg-config libtool-bin \
-    libvterm-dev xclip curl unzip fontconfig fonts-noto fonts-noto-cjk fonts-noto-color-emoji
+    xclip curl unzip fontconfig fonts-noto fonts-noto-cjk fonts-noto-color-emoji
 
   # Provide `fd` alias if only fdfind exists
   if have fdfind && ! have fd; then
@@ -211,7 +211,6 @@ Done!
 
 Next steps:
 - Launch Emacs and enjoy. On Ubuntu, ensure an emoji/CJK-capable font is selected (Noto packages installed).
-- Terminal (vterm) will auto-build if needed; we installed cmake/libtool/libvterm.
 - If `fd` command is missing, we created a symlink to `fdfind` in ~/.local/bin.
 
 Tip: Re-run this installer any time; it is safe and idempotent.

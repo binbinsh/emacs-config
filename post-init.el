@@ -260,10 +260,26 @@
   ;; Dirvish: modern dired UI
   (use-package dirvish
     :defer t
-    :init (require 'nerd-icons nil t)
-    :config
+    :init
+    (require 'nerd-icons nil t)
     (dirvish-override-dired-mode)
-    (setq dirvish-attributes '(nerd-icons file-size file-time)))
+    :custom
+    (dirvish-attributes '(nerd-icons vc-state subtree-state collapse file-size file-time))
+    (dirvish-header-line-format '(:left (path) :right (free-space)))
+    (dirvish-mode-line-format '(:left (sort omit symlink) :right (index)))
+    (dirvish-use-header-line t)
+    (dirvish-use-mode-line nil)
+    (dirvish-hide-details t)
+    (dirvish-hide-cursor t)
+    (dirvish-window-fringe 8)
+    :config
+    (with-eval-after-load 'dirvish-subtree
+      (setq dirvish-subtree-state-style 'nerd
+            dirvish-subtree-always-show-state t))
+    (with-eval-after-load 'dirvish-side
+      (setq dirvish-side-width 32
+            dirvish-side-attributes '(nerd-icons subtree-state)
+            dirvish-side-header-line-format '(:left (project) :right (free-space)))))
 
   (use-package diredfl :hook (dired-mode . diredfl-mode))
   (use-package dired-git-info :defer t :commands dired-git-info-mode)
@@ -274,10 +290,8 @@
     "Toggle quick preview in Dirvish or Dired."
     (interactive)
     (cond
-     ((and (boundp 'dirvish-mode) dirvish-mode (fboundp 'dirvish-peek-mode))
-      (if (bound-and-true-p dirvish-peek-mode)
-          (dirvish-peek-mode -1)
-        (dirvish-peek-mode 1)))
+     ((and (fboundp 'dirvish-curr) (dirvish-curr) (fboundp 'dirvish-layout-toggle))
+      (dirvish-layout-toggle))
      ((derived-mode-p 'dired-mode)
       (when (require 'peep-dired nil t)
         (if (bound-and-true-p peep-dired-mode)
@@ -431,19 +445,14 @@
 ;; ============================================================================
 
 (my/load-feature "terminal"
-  ;; vterm terminal
-  (use-package vterm
-    :commands (vterm vterm-mode)
-    :init
-    (setq vterm-always-compile-module t)
+  ;; eat terminal
+  (use-package eat
+    :commands (eat eat-mode)
     :config
-    (setq vterm-shell my/terminal-shell
-          vterm-max-scrollback 10240
-          vterm-kill-buffer-on-exit t
-          vterm-copy-mode-remove-fake-newlines t))
+    (setq eat-kill-buffer-on-exit t))
 
   ;; Disable visual clutter in terminal
-  (add-hook 'vterm-mode-hook
+  (add-hook 'eat-mode-hook
             (lambda ()
               (display-fill-column-indicator-mode -1)
               (display-line-numbers-mode -1)
@@ -453,7 +462,7 @@
   (defvar-local my/terminal--static-name nil)
 
   (defun my/terminal--buffer-name (&optional directory)
-    "Return canonical vterm buffer name for DIRECTORY."
+    "Return canonical terminal buffer name for DIRECTORY."
     (let* ((raw (or directory default-directory "~"))
            (remote (file-remote-p raw))
            (path nil) (host nil))
@@ -465,12 +474,12 @@
             (setq host (or (car (split-string (or remote-host "") "\\.")) "localhost")))
         (setq path (abbreviate-file-name (directory-file-name raw)))
         (setq host (car (split-string (or (system-name) "localhost") "\\."))))
-      (format "vterm: %s@%s" (or path "~") (or host "localhost"))))
+      (format "eat: %s@%s" (or path "~") (or host "localhost"))))
 
-  (defun my/toggle-vterm ()
-    "Toggle a bottom vterm panel (30% height)."
+  (defun my/toggle-eat ()
+    "Toggle a bottom eat panel (30% height)."
     (interactive)
-    (let* ((name "vterm")
+    (let* ((name "eat")
            (buf (get-buffer name))
            (win (and buf (get-buffer-window buf))))
       (if (and buf (window-live-p win))
@@ -480,19 +489,22 @@
           (select-window new-win)
           (if (buffer-live-p buf)
               (switch-to-buffer buf)
-            (vterm)
+            (eat)
             (rename-buffer name t))))))
 
-  (defun my/vterm-clipboard-yank ()
-    "Paste system clipboard into vterm."
+  (defun my/eat-clipboard-yank ()
+    "Paste system clipboard into eat."
     (interactive)
     (let* ((text (cond
                   ((fboundp 'simpleclip-get-contents) (simpleclip-get-contents))
                   ((fboundp 'gui-get-selection) (gui-get-selection 'CLIPBOARD))
                   (t nil))))
       (when (and text (not (string-empty-p text)))
-        (if (derived-mode-p 'vterm-mode)
-            (vterm-send-string text)
+        (if (derived-mode-p 'eat-mode)
+            (let ((proc (get-buffer-process (current-buffer))))
+              (if proc
+                  (process-send-string proc text)
+                (insert text)))
           (insert text))))))
 
 (my/load-feature "tramp"
@@ -810,8 +822,8 @@
     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
   (use-package ast-grep
-    :commands (ast-grep ast-grep-create-rule ast-grep-show-rule-overlay
-               ast-grep-remove-rule-overlay))
+    :vc (:url "https://github.com/SunskyXH/ast-grep.el")
+    :commands (ast-grep-search ast-grep-project ast-grep-directory))
 
   (use-package multiple-cursors
     :bind (("C->" . mc/mark-next-like-this)
@@ -847,23 +859,23 @@
       (consult-ripgrep dir)))
 
   (defun my/ast-grep-search ()
-    "Run ast-grep search in project directory."
+    "Run ast-grep search in project or current directory."
     (interactive)
     (let* ((proj (project-current))
            (dir (if proj (project-root proj) default-directory))
-           (pattern (read-string "ast-grep pattern: " (thing-at-point 'symbol t)))
-           (default-directory dir))
-      (compilation-start (format "ast-grep run --pattern %s" (shell-quote-argument pattern))
-                         'grep-mode)))
+           (pattern (read-string "ast-grep pattern: " (thing-at-point 'symbol t)
+                                 'ast-grep-history)))
+      (ast-grep-search pattern dir)))
 
   (global-set-key (kbd "s-F") #'my/project-search-dwim)
   (global-set-key (kbd "s-P") #'execute-extended-command)
   (global-set-key (kbd "s-p") #'project-find-file)
   (global-set-key (kbd "s-b") #'my/toggle-explorer)
-  (global-set-key (kbd "s-`") #'my/toggle-vterm)
+  (global-set-key (kbd "s-`") #'my/toggle-eat)
   (global-set-key (kbd "s-E") #'my/focus-explorer)
   (global-set-key (kbd "s-G") #'magit-status)
   (global-set-key (kbd "s-d") #'mc/mark-next-like-this)
+  (global-set-key (kbd "C-x d") #'dirvish-dwim)
 
   ;; Terminal super key bindings via CSI u sequences (for Ghostty SSH)
   (unless (display-graphic-p)
@@ -904,7 +916,7 @@
 
   ;; C-c global shortcuts
   (global-set-key (kbd "C-c e") #'my/focus-explorer)
-  (global-set-key (kbd "C-c v") #'my/toggle-vterm)
+  (global-set-key (kbd "C-c v") #'my/toggle-eat)
   (global-set-key (kbd "C-c g") #'fork-git-open-repo-dashboard)
   (global-set-key (kbd "C-c /") #'consult-ripgrep)
   (global-set-key (kbd "C-c ?") #'my/ast-grep-search)
@@ -929,11 +941,11 @@
      (t (user-error "No diagnostics UI available"))))
   (global-set-key (kbd "C-c !") #'my/open-diagnostics)
 
-  ;; vterm keybindings
-  (with-eval-after-load 'vterm
-    (let ((map vterm-mode-map))
+  ;; eat keybindings
+  (with-eval-after-load 'eat
+    (let ((map eat-mode-map))
       (define-key map (kbd "C-c o") #'find-file)
-      (define-key map (kbd "C-y") #'my/vterm-clipboard-yank)))
+      (define-key map (kbd "C-y") #'my/eat-clipboard-yank)))
 
   ;; LSP keybindings
   (with-eval-after-load 'lsp-mode

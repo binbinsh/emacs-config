@@ -16,9 +16,10 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | **UI/UX** | Monokai Light theme, JetBrainsMono Nerd Font, tabs, smooth scrolling, line numbers, 120-column guide, posframe UIs |
 | **Modeline** | `doom-modeline` + `keycast` always-on feedback |
 | **Completion** | Vertico + Orderless + Marginalia + Consult + Embark + Corfu + Cape + kind-icon |
+| **Code Search** | `ast-grep.el` structural search with AST patterns |
 | **Diagnostics** | Flymake via LSP for inline errors. `C-c !` opens diagnostics list |
 | **Explorer** | Treemacs sidebar with nerd-icons, auto-start, VSCode-style keybindings |
-| **Terminal** | Integrated vterm terminal panel with TRAMP/SSH support |
+| **Terminal** | Integrated eat terminal panel |
 | **Git** | Magit, gitflow, inline blame (blamer), delta diffs, diff-hl gutter |
 | **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
 | **Python** | Pyright LSP, Ruff, format + organize imports on save, pytest via `uv run`, debugpy/dap-mode |
@@ -66,6 +67,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 |-----|--------|
 | `C-c e` | Focus/toggle Treemacs sidebar |
 | `C-c /` | Ripgrep search |
+| `C-c ?` | AST search (ast-grep) |
 | `C-c b` | Switch buffers |
 | `C-c p` | Project files |
 | `C-c o` | Open file |
@@ -151,6 +153,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - Node.js + npm (for bash-language-server)
 - pandoc (for markdown preview)
 - delta (for better git diffs)
+- ast-grep (CLI required by `ast-grep.el`)
 
 ## Cache Location
 
