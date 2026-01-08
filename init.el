@@ -119,6 +119,15 @@
   :init (setq exec-path-from-shell-arguments '("-l"))
   :config (exec-path-from-shell-copy-envs '("PATH" "MANPATH" "LANG" "LC_ALL" "SSH_AUTH_SOCK")))
 
+;; macOS modifier keys (Option as Meta; keep right Option for symbols)
+(when (eq system-type 'darwin)
+  (when (boundp 'mac-option-modifier)
+    (setq mac-option-modifier 'meta
+          mac-right-option-modifier 'none))
+  (when (boundp 'ns-option-modifier)
+    (setq ns-option-modifier 'meta
+          ns-right-option-modifier 'none)))
+
 ;; Clipboard integration
 (use-package simpleclip :init (simpleclip-mode 1))
 
