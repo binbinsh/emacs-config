@@ -263,8 +263,7 @@
     :init (require 'nerd-icons nil t)
     :config
     (dirvish-override-dired-mode)
-    (setq dirvish-attributes (list (if (display-graphic-p) 'vscode-icon 'nerd-icons)
-                                   'file-size 'file-time)))
+    (setq dirvish-attributes '(nerd-icons file-size file-time)))
 
   (use-package diredfl :hook (dired-mode . diredfl-mode))
   (use-package dired-git-info :defer t :commands dired-git-info-mode)
@@ -316,62 +315,116 @@
       (define-key map (kbd "D") #'dired-do-delete)
       (define-key map (kbd "TAB") #'other-window))))
 
-(my/load-feature "dirvish-side"
-  (use-package vscode-icon :if (display-graphic-p))
-  (use-package dirvish
-    :after project
+(my/load-feature "treemacs"
+  ;; Treemacs: modern IDE-style file explorer
+  (use-package treemacs
+    :defer t
+    :init
+    (setq treemacs-persist-file (expand-file-name "treemacs-persist" my-emacs-cache-directory)
+          treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" my-emacs-cache-directory))
     :config
-    (dirvish-override-dired-mode)
-    (when (display-graphic-p)
-      (setq dirvish-attributes '(vscode-icon file-size file-time)
-            dirvish-side-attributes '(vscode-icon file-size))))
+    ;; Visual settings
+    (setq treemacs-width 35
+          treemacs-width-is-initially-locked nil
+          treemacs-indentation 2
+          treemacs-indentation-string " "
+          treemacs-show-hidden-files t
+          treemacs-sorting 'alphabetic-asc
+          treemacs-follow-after-init t
+          treemacs-expand-after-init t
+          treemacs-is-never-other-window nil  ;; Allow switching to treemacs with C-x o
+          treemacs-silent-refresh t
+          treemacs-silent-filewatch t
+          treemacs-no-png-images nil
+          treemacs-collapse-dirs (if treemacs-python-executable 3 0)
+          treemacs-file-event-delay 1000
+          treemacs-file-follow-delay 0.1
+          treemacs-recenter-after-file-follow nil
+          treemacs-recenter-after-tag-follow nil
+          treemacs-goto-tag-strategy 'refetch-index
+          treemacs-show-cursor nil
+          treemacs-user-mode-line-format nil
+          treemacs-select-when-already-in-treemacs 'move-back
+          treemacs-space-between-root-nodes t
+          treemacs-directory-name-transformer #'identity
+          treemacs-file-name-transformer #'identity)
 
-  (setq dirvish-side-display-alist '((side . left) (slot . -1))
-        dirvish-side-width 40
-        dirvish-side-window-parameters '((no-delete-other-windows . t)
-                                         (no-other-window . t)))
+    ;; Enable modes
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode 'always)
+    (treemacs-hide-gitignored-files-mode nil)
 
-  (defun my/dirvish-project-root ()
-    "Open dirvish at project root or current directory."
-    (let* ((project (ignore-errors (project-current)))
-           (root (if project (project-root project) default-directory)))
-      (let ((blocked (and (fboundp 'dirvish-curr)
-                          (when-let* ((dv (dirvish-curr))) (dv-curr-layout dv)))))
-        (if blocked
-            (with-temp-buffer (dirvish-side root))
-          (dirvish-side root)))))
+    ;; Git integration (deferred for performance)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t) (treemacs-git-mode 'deferred))
+      (`(t . _) (treemacs-git-mode 'simple)))
 
+    ;; VSCode-style keybindings in treemacs buffer
+    (define-key treemacs-mode-map (kbd "a") #'treemacs-create-file)
+    (define-key treemacs-mode-map (kbd "A") #'treemacs-create-dir)
+    (define-key treemacs-mode-map (kbd "r") #'treemacs-rename-file)
+    (define-key treemacs-mode-map (kbd "d") #'treemacs-delete-file)
+    (define-key treemacs-mode-map (kbd "m") #'treemacs-move-file)
+    (define-key treemacs-mode-map (kbd "c") #'treemacs-copy-file)
+    (define-key treemacs-mode-map (kbd "y") #'treemacs-copy-path-at-point)
+    (define-key treemacs-mode-map (kbd "Y") #'treemacs-copy-project-root)
+    (define-key treemacs-mode-map (kbd "o") #'treemacs-visit-node-ace)
+    (define-key treemacs-mode-map (kbd "O") #'treemacs-visit-node-ace-horizontal-split)
+    (define-key treemacs-mode-map (kbd "v") #'treemacs-visit-node-ace-vertical-split)
+    (define-key treemacs-mode-map (kbd "x") #'treemacs-collapse-parent-node)
+    (define-key treemacs-mode-map (kbd "u") #'treemacs-goto-parent-node)
+    (define-key treemacs-mode-map (kbd "R") #'treemacs-refresh)
+    (define-key treemacs-mode-map (kbd "H") #'treemacs-toggle-show-dotfiles)
+    (define-key treemacs-mode-map (kbd "w") #'treemacs-set-width)
+    (define-key treemacs-mode-map (kbd "P") #'treemacs-peek-mode))
+
+  ;; Nerd icons theme (beautiful icons)
+  (use-package treemacs-nerd-icons
+    :after treemacs
+    :config
+    (treemacs-load-theme "nerd-icons"))
+
+  ;; Magit integration
+  (use-package treemacs-magit
+    :after (treemacs magit))
+
+  ;; Project.el integration
+  (use-package treemacs-project-follow-mode
+    :ensure nil
+    :after treemacs
+    :config
+    (treemacs-project-follow-mode t))
+
+  ;; Toggle/focus functions
   (defun my/toggle-explorer ()
-    "Toggle explorer like VSCode sidebar."
+    "Toggle Treemacs sidebar."
     (interactive)
-    (let ((w (and (fboundp 'dirvish-side--session-visible-p)
-                  (dirvish-side--session-visible-p))))
-      (if (and (windowp w) (window-live-p w))
-          (with-selected-window w (dirvish-quit))
-        (my/dirvish-project-root))))
-
-  (defun my/dirvish-side-window ()
-    "Return the Dirvish side window if visible."
-    (catch 'win
-      (dolist (w (window-list))
-        (with-current-buffer (window-buffer w)
-          (when (and (derived-mode-p 'dirvish-directory-view-mode)
-                     (eq (window-parameter w 'no-other-window) t))
-            (throw 'win w))))
-      nil))
+    (if (and (fboundp 'treemacs-current-visibility)
+             (eq (treemacs-current-visibility) 'visible))
+        (treemacs)
+      (let* ((project (ignore-errors (project-current)))
+             (root (if project (project-root project) default-directory)))
+        (treemacs-add-and-display-current-project-exclusively))))
 
   (defun my/focus-explorer ()
-    "Focus the explorer sidebar."
+    "Focus the Treemacs sidebar, opening it if necessary."
     (interactive)
-    (let ((side (my/dirvish-side-window)))
-      (cond
-       ((and (windowp side) (window-live-p side))
-        (select-window side))
-       (t
-        (ignore-errors (my/dirvish-project-root))
-        (when-let* ((w (my/dirvish-side-window)))
-          (when (window-live-p w)
-            (select-window w))))))))
+    (pcase (treemacs-current-visibility)
+      ('visible (treemacs-select-window))
+      (_ (my/toggle-explorer))))
+
+  ;; Auto-start treemacs on startup (after frame is ready)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (when (display-graphic-p)
+                (run-with-idle-timer
+                 0.5 nil
+                 (lambda ()
+                   (unless (eq (treemacs-current-visibility) 'visible)
+                     (save-selected-window
+                       (treemacs-add-and-display-current-project-exclusively)))))))))
 
 ;; ============================================================================
 ;; 6. TERMINAL AND TRAMP
@@ -756,6 +809,10 @@
     (setq dumb-jump-prefer-searcher 'rg)
     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
+  (use-package ast-grep
+    :commands (ast-grep ast-grep-create-rule ast-grep-show-rule-overlay
+               ast-grep-remove-rule-overlay))
+
   (use-package multiple-cursors
     :bind (("C->" . mc/mark-next-like-this)
            ("C-<" . mc/mark-previous-like-this)
@@ -789,6 +846,16 @@
            (dir (if proj (project-root proj) default-directory)))
       (consult-ripgrep dir)))
 
+  (defun my/ast-grep-search ()
+    "Run ast-grep search in project directory."
+    (interactive)
+    (let* ((proj (project-current))
+           (dir (if proj (project-root proj) default-directory))
+           (pattern (read-string "ast-grep pattern: " (thing-at-point 'symbol t)))
+           (default-directory dir))
+      (compilation-start (format "ast-grep run --pattern %s" (shell-quote-argument pattern))
+                         'grep-mode)))
+
   (global-set-key (kbd "s-F") #'my/project-search-dwim)
   (global-set-key (kbd "s-P") #'execute-extended-command)
   (global-set-key (kbd "s-p") #'project-find-file)
@@ -797,6 +864,17 @@
   (global-set-key (kbd "s-E") #'my/focus-explorer)
   (global-set-key (kbd "s-G") #'magit-status)
   (global-set-key (kbd "s-d") #'mc/mark-next-like-this)
+
+  ;; Terminal super key bindings via CSI u sequences (for Ghostty SSH)
+  (unless (display-graphic-p)
+    (define-key input-decode-map "\e[70;5u" (kbd "s-F"))
+    (define-key input-decode-map "\e[80;5u" (kbd "s-P"))
+    (define-key input-decode-map "\e[112;3u" (kbd "s-p"))
+    (define-key input-decode-map "\e[98;3u" (kbd "s-b"))
+    (define-key input-decode-map "\e[96;3u" (kbd "s-`"))
+    (define-key input-decode-map "\e[69;5u" (kbd "s-E"))
+    (define-key input-decode-map "\e[71;5u" (kbd "s-G"))
+    (define-key input-decode-map "\e[100;3u" (kbd "s-d")))
 
   ;; Git hunk navigation
   (global-set-key (kbd "C-c [h") #'my/goto-prev-hunk)
@@ -829,6 +907,7 @@
   (global-set-key (kbd "C-c v") #'my/toggle-vterm)
   (global-set-key (kbd "C-c g") #'fork-git-open-repo-dashboard)
   (global-set-key (kbd "C-c /") #'consult-ripgrep)
+  (global-set-key (kbd "C-c ?") #'my/ast-grep-search)
   (global-set-key (kbd "C-c b") #'consult-buffer)
   (global-set-key (kbd "C-c p") #'project-find-file)
   (global-set-key (kbd "C-c o") #'find-file)

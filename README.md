@@ -17,7 +17,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | **Modeline** | `doom-modeline` + `keycast` always-on feedback |
 | **Completion** | Vertico + Orderless + Marginalia + Consult + Embark + Corfu + Cape + kind-icon |
 | **Diagnostics** | Flymake via LSP for inline errors. `C-c !` opens diagnostics list |
-| **Explorer** | Dirvish sidebar with vscode-icon, two-pane mode, quick preview |
+| **Explorer** | Treemacs sidebar with nerd-icons, auto-start, VSCode-style keybindings |
 | **Terminal** | Integrated vterm terminal panel with TRAMP/SSH support |
 | **Git** | Magit, gitflow, inline blame (blamer), delta diffs, diff-hl gutter |
 | **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
@@ -64,7 +64,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 
 | Key | Action |
 |-----|--------|
-| `C-c e` | Focus/toggle Dirvish sidebar |
+| `C-c e` | Focus/toggle Treemacs sidebar |
 | `C-c /` | Ripgrep search |
 | `C-c b` | Switch buffers |
 | `C-c p` | Project files |
@@ -108,6 +108,23 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 
 | Mode | Key | Action |
 |------|-----|--------|
+| Treemacs | `a` | New file |
+| Treemacs | `A` | New folder |
+| Treemacs | `r` | Rename |
+| Treemacs | `d` | Delete |
+| Treemacs | `m` | Move |
+| Treemacs | `c` | Copy file |
+| Treemacs | `y` | Copy path |
+| Treemacs | `Y` | Copy project root path |
+| Treemacs | `o` | Open (ace select window) |
+| Treemacs | `O` | Open horizontal split |
+| Treemacs | `v` | Open vertical split |
+| Treemacs | `u` | Go to parent |
+| Treemacs | `x` | Collapse parent |
+| Treemacs | `R` | Refresh |
+| Treemacs | `H` | Toggle hidden files |
+| Treemacs | `P` | Peek mode |
+| Treemacs | `w` | Set width |
 | Dired/Dirvish | `V` | Quick preview |
 | Dired/Dirvish | `C` | Copy |
 | Dired/Dirvish | `R` | Rename |
@@ -138,7 +155,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 ## Cache Location
 
 All temporary files go to `~/.cache/emacs/` (XDG compliant):
-- auto-save, backups, eln-cache, lsp, tramp, dirvish, svg-lib, transient, etc.
+- auto-save, backups, eln-cache, lsp, tramp, treemacs, svg-lib, transient, etc.
 
 ## Package Archives
 
