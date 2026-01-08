@@ -238,12 +238,6 @@
 ;; ============================================================================
 
 (my/load-feature "dired"
-  ;; Use ls-lisp for cross-platform compatibility
-  (setq ls-lisp-use-insert-directory-program nil)
-  (require 'ls-lisp)
-  (setq ls-lisp-dirs-first t)
-  (require 'dired)
-
   ;; Dired usability
   (setq dired-dwim-target t
         dired-recursive-deletes 'always
@@ -256,30 +250,6 @@
   (add-hook 'dired-mode-hook (lambda ()
     (when (fboundp 'dired-hide-details-mode) (dired-hide-details-mode 1))
     (hl-line-mode 1)))
-
-  ;; Dirvish: modern dired UI
-  (use-package dirvish
-    :defer t
-    :init
-    (require 'nerd-icons nil t)
-    (dirvish-override-dired-mode)
-    :custom
-    (dirvish-attributes '(nerd-icons vc-state subtree-state collapse file-size file-time))
-    (dirvish-header-line-format '(:left (path) :right (free-space)))
-    (dirvish-mode-line-format '(:left (sort omit symlink) :right (index)))
-    (dirvish-use-header-line t)
-    (dirvish-use-mode-line nil)
-    (dirvish-hide-details t)
-    (dirvish-hide-cursor t)
-    (dirvish-window-fringe 8)
-    :config
-    (with-eval-after-load 'dirvish-subtree
-      (setq dirvish-subtree-state-style 'nerd
-            dirvish-subtree-always-show-state t))
-    (with-eval-after-load 'dirvish-side
-      (setq dirvish-side-width 32
-            dirvish-side-attributes '(nerd-icons subtree-state)
-            dirvish-side-header-line-format '(:left (project) :right (free-space)))))
 
   (use-package diredfl :hook (dired-mode . diredfl-mode))
   (use-package dired-git-info :defer t :commands dired-git-info-mode)
@@ -580,50 +550,6 @@
     (with-eval-after-load 'magit
       (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
 
-  ;; Fork-like helpers
-  (defun fork-git-open-status ()
-    "Open Magit status for current project."
-    (interactive)
-    (let ((root (or (ignore-errors (magit-toplevel))
-                    (when-let* ((proj (project-current))) (project-root proj))
-                    default-directory)))
-      (magit-status-setup-buffer root)))
-
-  (defun fork-git-blame-toggle ()
-    "Toggle Magit blame."
-    (interactive)
-    (require 'magit)
-    (if (bound-and-true-p magit-blame-mode)
-        (magit-blame-quit)
-      (magit-blame-addition)))
-
-  (defun fork-git-file-history ()
-    "Show Git history for current file."
-    (interactive)
-    (require 'magit)
-    (call-interactively 'magit-log-buffer-file))
-
-  (defun fork-git-branch-graph ()
-    "Show branch graph."
-    (interactive)
-    (require 'magit)
-    (let ((magit-log-arguments '("--graph" "--decorate" "--date-order")))
-      (magit-log-all '())))
-
-  (defun fork-git-show-inline-commit ()
-    "Show inline commit details."
-    (interactive)
-    (require 'blamer)
-    (call-interactively 'blamer-show-commit-info))
-
-  (defun fork-git-magit-delta-toggle ()
-    "Toggle delta diffs."
-    (interactive)
-    (require 'magit-delta)
-    (if (bound-and-true-p magit-delta-mode)
-        (magit-delta-mode -1)
-      (magit-delta-mode 1)))
-
   ;; Hunk navigation
   (defun my/goto-next-hunk ()
     "Go to next git diff hunk."
@@ -641,27 +567,7 @@
     "Show diff for current hunk."
     (interactive)
     (if (fboundp 'diff-hl-diff-goto-hunk) (diff-hl-diff-goto-hunk)
-      (message "diff-hl not available")))
-
-  ;; Repository dashboard
-  (defvar fork-git-repo-dashboard-buffer-name "*Fork Git Repositories*")
-
-  (defun fork-git-open-repo-dashboard ()
-    "Open repository dashboard."
-    (interactive)
-    (unless magit-repository-directories
-      (user-error "Set `magit-repository-directories' first"))
-    (require 'magit-repos)
-    (let ((buf (get-buffer-create fork-git-repo-dashboard-buffer-name)))
-      (with-current-buffer buf
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (insert "Git Repositories\n\n")
-          (dolist (repo (magit-list-repos))
-            (insert (format "  %s\n" (abbreviate-file-name repo))))
-          (goto-char (point-min)))
-        (special-mode))
-      (pop-to-buffer buf))))
+      (message "diff-hl not available"))))
 
 ;; ============================================================================
 ;; 8. LANGUAGES AND LSP
@@ -874,6 +780,7 @@
   (global-set-key (kbd "s-`") #'my/toggle-eat)
   (global-set-key (kbd "s-E") #'my/focus-explorer)
   (global-set-key (kbd "s-G") #'magit-status)
+  (global-set-key (kbd "C-c g") #'magit-status)
   (global-set-key (kbd "s-d") #'mc/mark-next-like-this)
   (global-set-key (kbd "C-x d") #'dirvish-dwim)
 
@@ -917,7 +824,7 @@
   ;; C-c global shortcuts
   (global-set-key (kbd "C-c e") #'my/focus-explorer)
   (global-set-key (kbd "C-c v") #'my/toggle-eat)
-  (global-set-key (kbd "C-c g") #'fork-git-open-repo-dashboard)
+  (global-set-key (kbd "C-c G") #'magit-list-repositories)
   (global-set-key (kbd "C-c /") #'consult-ripgrep)
   (global-set-key (kbd "C-c ?") #'my/ast-grep-search)
   (global-set-key (kbd "C-c b") #'consult-buffer)
@@ -928,7 +835,6 @@
   (global-set-key (kbd "C-c ]") #'tab-next)
   (global-set-key (kbd "C-c n") #'tab-new)
   (global-set-key (kbd "C-c x") #'tab-close)
-  (global-set-key (kbd "C-c y") #'fork-git-show-inline-commit)
   (global-set-key (kbd "C-c d") #'my/goto-definition-smart)
   (global-set-key (kbd "C-c j") #'consult-imenu)
 
@@ -968,12 +874,13 @@
 
   ;; Magit keybindings
   (with-eval-after-load 'magit
+    ;; Disable default C-x g, use C-c g instead
+    (global-unset-key (kbd "C-x g"))
     (let ((map magit-mode-map))
-      (define-key map (kbd "C-c g") #'fork-git-open-repo-dashboard)
-      (define-key map (kbd "C-c b") #'fork-git-branch-graph)
-      (define-key map (kbd "C-c h") #'fork-git-file-history)
-      (define-key map (kbd "C-c B") #'fork-git-blame-toggle)
-      (define-key map (kbd "C-c d") #'fork-git-magit-delta-toggle)))
+      (define-key map (kbd "C-c G") #'magit-list-repositories)
+      (define-key map (kbd "C-c b") #'magit-log-all)
+      (define-key map (kbd "C-c h") #'magit-log-buffer-file)
+      (define-key map (kbd "C-c B") #'magit-blame)))
 
   ;; Python keybindings
   (with-eval-after-load 'python

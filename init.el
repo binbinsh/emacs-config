@@ -182,7 +182,40 @@
 (add-hook 'after-make-frame-functions #'my/apply-fonts)
 
 ;; ============================================================================
-;; 6. ASYNC LOADING TRIGGER
+;; 6. DIRED ENHANCEMENT (immediate for emacs -nw .)
+;; ============================================================================
+
+;; Dired sorting: directories first
+(setq ls-lisp-use-insert-directory-program nil)
+(require 'ls-lisp)
+(setq ls-lisp-dirs-first t)
+
+;; Dirvish: modern dired UI - loaded early for `emacs -nw .` support
+(use-package dirvish
+  :demand t
+  :init
+  (require 'nerd-icons nil t)
+  :custom
+  (dirvish-attributes '(nerd-icons vc-state subtree-state collapse file-size file-time))
+  (dirvish-header-line-format '(:left (path) :right (free-space)))
+  (dirvish-mode-line-format '(:left (sort omit symlink) :right (index)))
+  (dirvish-use-header-line t)
+  (dirvish-use-mode-line nil)
+  (dirvish-hide-details t)
+  (dirvish-hide-cursor t)
+  (dirvish-window-fringe 8)
+  :config
+  (dirvish-override-dired-mode)
+  (with-eval-after-load 'dirvish-subtree
+    (setq dirvish-subtree-state-style 'nerd
+          dirvish-subtree-always-show-state t))
+  (with-eval-after-load 'dirvish-side
+    (setq dirvish-side-width 32
+          dirvish-side-attributes '(nerd-icons subtree-state)
+          dirvish-side-header-line-format '(:left (project) :right (free-space)))))
+
+;; ============================================================================
+;; 7. ASYNC LOADING TRIGGER
 ;; ============================================================================
 
 (defun my/load-post-init ()
