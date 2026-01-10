@@ -220,7 +220,29 @@
           dirvish-side-header-line-format '(:left (project) :right (free-space)))))
 
 ;; ============================================================================
-;; 7. ASYNC LOADING TRIGGER
+;; 7. VTERM TOGGLE (immediate availability)
+;; ============================================================================
+
+(defun my/toggle-vterm ()
+  "Toggle a bottom vterm panel (30% height)."
+  (interactive)
+  (let* ((name "*vterm*")
+         (buf (get-buffer name))
+         (win (and buf (get-buffer-window buf))))
+    (if (and buf (window-live-p win))
+        (delete-window win)
+      (let* ((target-lines (floor (* 0.3 (frame-height))))
+             (new-win (split-window (selected-window) (- target-lines) 'below)))
+        (select-window new-win)
+        (if (buffer-live-p buf)
+            (switch-to-buffer buf)
+          (vterm))))))
+
+(global-set-key (kbd "C-c v") #'my/toggle-vterm)
+(global-set-key (kbd "s-`") #'my/toggle-vterm)
+
+;; ============================================================================
+;; 8. ASYNC LOADING TRIGGER
 ;; ============================================================================
 
 (defun my/load-post-init ()

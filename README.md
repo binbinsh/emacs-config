@@ -19,7 +19,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | **Code Search** | `ast-grep.el` structural search with AST patterns |
 | **Diagnostics** | Flymake via LSP for inline errors. `C-c !` opens diagnostics list |
 | **Explorer** | Treemacs sidebar with nerd-icons, auto-start, VSCode-style keybindings |
-| **Terminal** | Integrated eat terminal panel |
+| **Terminal** | Integrated vterm terminal panel |
 | **Git** | Magit, gitflow, inline blame (blamer), delta diffs, diff-hl gutter |
 | **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
 | **Python** | Pyright LSP, Ruff, format + organize imports on save, pytest via `uv run`, debugpy/dap-mode |

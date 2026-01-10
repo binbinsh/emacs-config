@@ -89,7 +89,17 @@
    `(dirvish-hl-line ((t (:background ,bg+1))))
 
    ;; Nerd-icons colors (for dired/dirvish icons)
-   `(nerd-icons-dired-dir-face ((t (:foreground ,cyan))))))
+   `(nerd-icons-dired-dir-face ((t (:foreground ,cyan))))
+
+   ;; Vterm colors (light theme friendly)
+   `(vterm-color-black ((t (:foreground ,fg-1 :background ,fg-3))))
+   `(vterm-color-red ((t (:foreground ,red :background ,red))))
+   `(vterm-color-green ((t (:foreground "#629755" :background "#629755"))))
+   `(vterm-color-yellow ((t (:foreground ,yellow :background ,yellow))))
+   `(vterm-color-blue ((t (:foreground ,fg-2 :background ,fg-2))))
+   `(vterm-color-magenta ((t (:foreground "#9c27b0" :background "#9c27b0"))))
+   `(vterm-color-cyan ((t (:foreground ,cyan :background ,cyan))))
+   `(vterm-color-white ((t (:foreground ,fg-3 :background "#f8f8f2"))))))
 
 ;; Terminal mode: use terminal's background color instead of theme's
 ;; This allows seamless integration with terminal themes like tokyonight day

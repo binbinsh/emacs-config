@@ -415,67 +415,31 @@
 ;; ============================================================================
 
 (my/load-feature "terminal"
-  ;; eat terminal
-  (use-package eat
-    :commands (eat eat-mode)
+  ;; vterm terminal
+  (use-package vterm
+    :commands (vterm vterm-mode)
     :config
-    (setq eat-kill-buffer-on-exit t)
-    (setq eat-term-name "xterm-256color"))
+    (setq vterm-kill-buffer-on-exit t)
+    (setq vterm-max-scrollback 10000)
+    (setq vterm-shell my/terminal-shell))
 
   ;; Disable visual clutter in terminal
-  (add-hook 'eat-mode-hook
+  (add-hook 'vterm-mode-hook
             (lambda ()
               (display-fill-column-indicator-mode -1)
               (display-line-numbers-mode -1)
               (setq-local global-hl-line-mode nil)))
 
-  ;; Terminal buffer naming
-  (defvar-local my/terminal--static-name nil)
-
-  (defun my/terminal--buffer-name (&optional directory)
-    "Return canonical terminal buffer name for DIRECTORY."
-    (let* ((raw (or directory default-directory "~"))
-           (remote (file-remote-p raw))
-           (path nil) (host nil))
-      (if remote
-          (let* ((vec (ignore-errors (tramp-dissect-file-name raw)))
-                 (local (or (and vec (tramp-file-name-localname vec)) raw))
-                 (remote-host (and vec (tramp-file-name-host vec))))
-            (setq path (abbreviate-file-name (directory-file-name local)))
-            (setq host (or (car (split-string (or remote-host "") "\\.")) "localhost")))
-        (setq path (abbreviate-file-name (directory-file-name raw)))
-        (setq host (car (split-string (or (system-name) "localhost") "\\."))))
-      (format "eat: %s@%s" (or path "~") (or host "localhost"))))
-
-  (defun my/toggle-eat ()
-    "Toggle a bottom eat panel (30% height)."
-    (interactive)
-    (let* ((name "eat")
-           (buf (get-buffer name))
-           (win (and buf (get-buffer-window buf))))
-      (if (and buf (window-live-p win))
-          (delete-window win)
-        (let* ((target-lines (floor (* 0.3 (frame-height))))
-               (new-win (split-window (selected-window) (- target-lines) 'below)))
-          (select-window new-win)
-          (if (buffer-live-p buf)
-              (switch-to-buffer buf)
-            (eat)
-            (rename-buffer name t))))))
-
-  (defun my/eat-clipboard-yank ()
-    "Paste system clipboard into eat."
+  (defun my/vterm-clipboard-yank ()
+    "Paste system clipboard into vterm."
     (interactive)
     (let* ((text (cond
                   ((fboundp 'simpleclip-get-contents) (simpleclip-get-contents))
                   ((fboundp 'gui-get-selection) (gui-get-selection 'CLIPBOARD))
                   (t nil))))
       (when (and text (not (string-empty-p text)))
-        (if (derived-mode-p 'eat-mode)
-            (let ((proc (get-buffer-process (current-buffer))))
-              (if proc
-                  (process-send-string proc text)
-                (insert text)))
+        (if (derived-mode-p 'vterm-mode)
+            (vterm-send-string text)
           (insert text))))))
 
 (my/load-feature "tramp"
@@ -791,7 +755,6 @@
   (global-set-key (kbd "s-P") #'execute-extended-command)
   (global-set-key (kbd "s-p") #'project-find-file)
   (global-set-key (kbd "s-b") #'my/toggle-explorer)
-  (global-set-key (kbd "s-`") #'my/toggle-eat)
   (global-set-key (kbd "s-E") #'my/focus-explorer)
   (global-set-key (kbd "s-G") #'magit-status)
   (global-set-key (kbd "C-c g") #'magit-status)
@@ -837,7 +800,6 @@
 
   ;; C-c global shortcuts
   (global-set-key (kbd "C-c e") #'my/focus-explorer)
-  (global-set-key (kbd "C-c v") #'my/toggle-eat)
   (global-set-key (kbd "C-c G") #'magit-list-repositories)
   (global-set-key (kbd "C-c /") #'consult-ripgrep)
   (global-set-key (kbd "C-c ?") #'my/ast-grep-search)
@@ -861,11 +823,11 @@
      (t (user-error "No diagnostics UI available"))))
   (global-set-key (kbd "C-c !") #'my/open-diagnostics)
 
-  ;; eat keybindings
-  (with-eval-after-load 'eat
-    (let ((map eat-mode-map))
+  ;; vterm keybindings
+  (with-eval-after-load 'vterm
+    (let ((map vterm-mode-map))
       (define-key map (kbd "C-c o") #'find-file)
-      (define-key map (kbd "C-y") #'my/eat-clipboard-yank)))
+      (define-key map (kbd "C-y") #'my/vterm-clipboard-yank)))
 
   ;; LSP keybindings
   (with-eval-after-load 'lsp-mode
