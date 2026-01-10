@@ -419,7 +419,8 @@
   (use-package eat
     :commands (eat eat-mode)
     :config
-    (setq eat-kill-buffer-on-exit t))
+    (setq eat-kill-buffer-on-exit t)
+    (setq eat-term-name "xterm-256color"))
 
   ;; Disable visual clutter in terminal
   (add-hook 'eat-mode-hook
@@ -512,7 +513,7 @@
                 (when (bound-and-true-p diff-hl-mode) (diff-hl-mode -1))))))
 
 ;; ============================================================================
-;; 7. GIT INTEGRATION (MAGIT, FORK-LIKE UX)
+;; 7. GIT INTEGRATION (MAGIT)
 ;; ============================================================================
 
 (my/load-feature "git"
@@ -522,7 +523,18 @@
     :commands (magit-status magit-status-setup-buffer magit-dispatch)
     :init
     (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1
-          magit-bury-buffer-function #'magit-restore-window-configuration))
+          magit-bury-buffer-function #'magit-restore-window-configuration)
+    :config
+    ;; Performance optimizations
+    (setq magit-diff-refine-hunk nil              ; 不显示单词级别的精细 diff
+          magit-diff-highlight-hunk-body nil      ; 不高亮 hunk 内容
+          magit-section-highlight-hook nil        ; 禁用 section 高亮 hook
+          magit-section-unhighlight-hook nil      ; 禁用 section 取消高亮 hook
+          magit-refresh-status-buffer nil         ; 切换 buffer 时不自动刷新
+          magit-revision-insert-related-refs nil  ; 不显示相关 refs
+          magit-save-repository-buffers 'dontask  ; 自动保存不询问
+          magit-diff-paint-whitespace nil         ; 不高亮空白字符
+          auto-revert-buffer-list-filter 'magit-auto-revert-repository-buffer-p))
 
   (use-package magit-gitflow
     :after magit
@@ -537,9 +549,11 @@
     :custom (blamer-idle-time 0.3) (blamer-min-offset 70)
     :config (global-blamer-mode 1))
 
+  ;; magit-delta 会导致严重性能问题 - 每次光标移动都触发 delta 渲染
+  ;; 如需使用，可以手动 M-x magit-delta-mode 开启
   (use-package magit-delta
     :after magit
-    :hook (magit-mode . magit-delta-mode))
+    :commands magit-delta-mode)
 
   (use-package diff-hl
     :init

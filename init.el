@@ -47,6 +47,11 @@
   (or (getenv "SHELL")
       (if (eq system-type 'darwin) "/bin/zsh" "/bin/bash")))
 
+;; M-x package-install RET clipetty RET
+(use-package clipetty
+  :ensure t
+  :hook (tty-setup . global-clipetty-mode))
+
 ;; ============================================================================
 ;; 3. CACHE PATHS (my-emacs-cache-directory from early-init.el)
 ;; ============================================================================
