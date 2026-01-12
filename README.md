@@ -2,6 +2,8 @@
 
 A modern, fast Emacs configuration with async loading, LSP support, and VSCode-like UX.
 
+![Screenshot](https://raw.githubusercontent.com/binbinsh/emacs-config/main/screenshot.png)
+
 ## Quick Install
 
 ```bash
