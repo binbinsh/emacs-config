@@ -25,6 +25,10 @@
 ;; Reduce frame resize cost during theme/UI setup
 (setq frame-inhibit-implied-resize t)
 
+;; UTF-8 encoding
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8)
+
 ;; ============================================================================
 ;; 2. PACKAGE ARCHIVES
 ;; ============================================================================
