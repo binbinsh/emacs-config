@@ -28,6 +28,12 @@
 (require 'subr-x)
 (require 'cl-lib)
 
+;; Set SSH_AUTH_SOCK for 1Password immediately
+(when (eq system-type 'darwin)
+  (let ((sock (expand-file-name "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock")))
+    (when (file-exists-p sock)
+      (setenv "SSH_AUTH_SOCK" sock))))
+
 (defvar my/post-init-delay 0.0
   "Incremental delay for staggered feature loading.")
 
@@ -446,12 +452,10 @@
   (require 'tramp)
   (setq tramp-default-method "ssh")
 
-  ;; SSH connection sharing
-  (setq tramp-use-ssh-controlmaster-options t
-        tramp-ssh-controlmaster-options
-        "-o ControlMaster=auto -o ControlPath=~/.ssh/tramp.%%C -o ControlPersist=600")
+  ;; Disable ControlMaster - let SSH handle it via config if needed
+  (setq tramp-use-ssh-controlmaster-options nil)
 
-  ;; Cache settings
+  ;; Cache settings - aggressive caching for speed
   (setq remote-file-name-inhibit-cache nil
         tramp-completion-reread-directory-timeout nil
         tramp-cache-read-persistent-data t)
@@ -459,7 +463,7 @@
   ;; Performance tuning
   (setq tramp-verbose 1
         tramp-chunksize 65536
-        tramp-connection-timeout 10
+        tramp-connection-timeout 30
         tramp-copy-size-limit nil)
 
   ;; Disable VC for remote files
@@ -475,6 +479,31 @@
                 (setq-local vc-handled-backends nil)
                 (setq-local create-lockfiles nil)
                 (when (bound-and-true-p diff-hl-mode) (diff-hl-mode -1))))))
+
+;; Quick remote dired (outside of feature block for global availability)
+(defun my/ssh-hosts ()
+  "Get SSH hosts from ~/.ssh/config using TRAMP's parser."
+  (require 'tramp)
+  (let ((config (expand-file-name "~/.ssh/config")))
+    (when (file-exists-p config)
+      (delq nil
+            (mapcar (lambda (entry)
+                      (let ((host (cadr entry)))
+                        (when (and host (not (string-match-p "[*?]" host)))
+                          host)))
+                    (tramp-parse-sconfig config))))))
+
+(defun my/remote-dired (host &optional path)
+  "Open dired on remote HOST at PATH (defaults to home)."
+  (interactive
+   (list (completing-read "SSH Host: " (my/ssh-hosts) nil nil)))
+  ;; Use sshx method - doesn't run login shell, avoids prompt matching issues
+  (let ((dir (format "/sshx:%s:%s" host (or path "~/"))))
+    (if (fboundp 'dirvish)
+        (dirvish dir)
+      (dired dir))))
+
+(global-set-key (kbd "C-c s") #'my/remote-dired)
 
 ;; ============================================================================
 ;; 7. GIT INTEGRATION (MAGIT)

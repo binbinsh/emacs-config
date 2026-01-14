@@ -21,6 +21,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | **Code Search** | `ast-grep.el` structural search with AST patterns |
 | **Diagnostics** | Flymake via LSP for inline errors. `C-c !` opens diagnostics list |
 | **Explorer** | Treemacs sidebar with nerd-icons, auto-start, VSCode-style keybindings |
+| **Remote** | TRAMP with 1Password SSH agent, fast `sshx` method, quick host selection |
 | **Terminal** | Integrated vterm terminal panel |
 | **Git** | Magit, gitflow, inline blame (blamer), delta diffs, diff-hl gutter |
 | **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
@@ -86,6 +87,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | `C-c n` | New tab |
 | `C-c x` | Close tab |
 | `C-c B` | Project compile |
+| `C-c s` | SSH remote dired |
 
 ### Git hunk navigation
 
