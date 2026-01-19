@@ -50,7 +50,7 @@
 ;; M-x package-install RET clipetty RET
 (use-package clipetty
   :ensure t
-  :hook (tty-setup . global-clipetty-mode))
+  :hook (tty-setup . my/tty-clipboard-setup))
 
 ;; ============================================================================
 ;; 3. CACHE PATHS (my-emacs-cache-directory from early-init.el)
@@ -133,8 +133,54 @@
     (setq ns-option-modifier 'meta
           ns-right-option-modifier 'none)))
 
-;; Clipboard integration
-(use-package simpleclip :init (simpleclip-mode 1))
+;; Clipboard integration (macOS + Wayland, GUI + TTY)
+(defun my/clipboard-set (text)
+  "Copy TEXT to the system clipboard when available."
+  (let ((process-connection-type nil))
+    (cond
+     ((eq system-type 'darwin)
+      (when (executable-find "pbcopy")
+        (with-temp-buffer
+          (insert text)
+          (call-process-region (point-min) (point-max) "pbcopy" nil 0))))
+     ((getenv "WAYLAND_DISPLAY")
+      (when (executable-find "wl-copy")
+        (with-temp-buffer
+          (insert text)
+          (call-process-region (point-min) (point-max) "wl-copy" nil 0))))))
+  text)
+
+(defun my/clipboard-get ()
+  "Return clipboard contents, or nil."
+  (let ((process-connection-type nil)
+        (text nil))
+    (cond
+     ((eq system-type 'darwin)
+      (when (executable-find "pbpaste")
+        (with-temp-buffer
+          (call-process "pbpaste" nil t nil)
+          (setq text (buffer-string)))))
+     ((getenv "WAYLAND_DISPLAY")
+      (when (executable-find "wl-paste")
+        (with-temp-buffer
+          (call-process "wl-paste" nil t nil "-n")
+          (setq text (buffer-string))))))
+    (and text (> (length text) 0) text)))
+
+(defun my/clipboard-ensure-functions ()
+  "Ensure clipboard functions are set when missing (mainly for TTY)."
+  (when (or (eq system-type 'darwin) (getenv "WAYLAND_DISPLAY"))
+    (when (null interprogram-cut-function)
+      (setq interprogram-cut-function #'my/clipboard-set))
+    (when (null interprogram-paste-function)
+      (setq interprogram-paste-function #'my/clipboard-get))))
+
+(defun my/tty-clipboard-setup ()
+  "Setup clipboard helpers for TTY frames."
+  (my/clipboard-ensure-functions)
+  (global-clipetty-mode 1))
+
+(add-hook 'after-init-hook #'my/clipboard-ensure-functions)
 
 ;; GC smoothing
 (use-package gcmh

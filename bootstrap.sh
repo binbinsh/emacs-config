@@ -32,18 +32,18 @@ install_macos() {
     [ -d "/usr/local/bin" ] && ensure_path "/usr/local/bin"
   fi
 
-  # Install Emacs via emacs-plus tap
+  # Install Emacs via emacs-plus tap (latest beta)
   brew tap d12frosted/emacs-plus >/dev/null 2>&1 || true
-  if ! brew list emacs-plus >/dev/null 2>&1; then
-    info "Installing emacs-plus"
-    brew install emacs-plus || warn "Failed to install emacs-plus"
+  if ! brew list emacs-plus@31 >/dev/null 2>&1; then
+    info "Installing emacs-plus@31 (beta)"
+    brew install emacs-plus@31 || warn "Failed to install emacs-plus@31"
   else
-    info "emacs-plus already installed"
+    info "emacs-plus@31 already installed"
   fi
 
   # Symlink Emacs.app into /Applications for Spotlight/Launchpad
   brew_prefix="$(brew --prefix)"
-  app_src="$brew_prefix/opt/emacs-plus/Emacs.app"
+  app_src="$brew_prefix/opt/emacs-plus@31/Emacs.app"
   if [ ! -d "$app_src" ]; then
     app_src="$(ls -d "$brew_prefix"/opt/emacs-plus@*/Emacs.app 2>/dev/null | head -n1 || true)"
   fi
@@ -80,7 +80,7 @@ install_ubuntu() {
   sudo apt update -y
   sudo apt install -y \
     emacs git ripgrep fd-find cmake build-essential pkg-config libtool-bin \
-    xclip curl unzip fontconfig fonts-noto fonts-noto-cjk fonts-noto-color-emoji
+    wl-clipboard curl unzip fontconfig fonts-noto fonts-noto-cjk fonts-noto-color-emoji
 
   # Provide `fd` alias if only fdfind exists
   if have fdfind && ! have fd; then
