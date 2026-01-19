@@ -134,53 +134,78 @@
           ns-right-option-modifier 'none)))
 
 ;; Clipboard integration (macOS + Wayland, GUI + TTY)
+(defun my/clipboard-backend ()
+  "Return the available clipboard backend symbol, or nil."
+  (cond
+   ((eq system-type 'darwin)
+    (when (and (executable-find "pbcopy") (executable-find "pbpaste"))
+      'pbcopy))
+   ((and (or (getenv "WAYLAND_DISPLAY") (getenv "WAYLAND_SOCKET"))
+         (executable-find "wl-copy")
+         (executable-find "wl-paste"))
+    'wl-clipboard)
+   (t nil)))
+
 (defun my/clipboard-set (text)
   "Copy TEXT to the system clipboard when available."
-  (let ((process-connection-type nil))
-    (cond
-     ((eq system-type 'darwin)
-      (when (executable-find "pbcopy")
-        (with-temp-buffer
-          (insert text)
-          (call-process-region (point-min) (point-max) "pbcopy" nil 0))))
-     ((getenv "WAYLAND_DISPLAY")
-      (when (executable-find "wl-copy")
-        (with-temp-buffer
-          (insert text)
-          (call-process-region (point-min) (point-max) "wl-copy" nil 0))))))
+  (let ((process-connection-type nil)
+        (backend (my/clipboard-backend)))
+    (pcase backend
+      ('pbcopy
+       (with-temp-buffer
+         (insert text)
+         (call-process-region (point-min) (point-max) "pbcopy" nil 0)))
+      ('wl-clipboard
+       (with-temp-buffer
+         (insert text)
+         (call-process-region (point-min) (point-max) "wl-copy" nil 0)))))
   text)
 
 (defun my/clipboard-get ()
   "Return clipboard contents, or nil."
   (let ((process-connection-type nil)
+        (backend (my/clipboard-backend))
         (text nil))
-    (cond
-     ((eq system-type 'darwin)
-      (when (executable-find "pbpaste")
-        (with-temp-buffer
-          (call-process "pbpaste" nil t nil)
-          (setq text (buffer-string)))))
-     ((getenv "WAYLAND_DISPLAY")
-      (when (executable-find "wl-paste")
-        (with-temp-buffer
-          (call-process "wl-paste" nil t nil "-n")
-          (setq text (buffer-string))))))
+    (pcase backend
+      ('pbcopy
+       (with-temp-buffer
+         (call-process "pbpaste" nil t nil)
+         (setq text (buffer-string))))
+      ('wl-clipboard
+       (with-temp-buffer
+         (call-process "wl-paste" nil t nil "-n")
+         (setq text (buffer-string)))))
     (and text (> (length text) 0) text)))
 
 (defun my/clipboard-ensure-functions ()
-  "Ensure clipboard functions are set when missing (mainly for TTY)."
-  (when (or (eq system-type 'darwin) (getenv "WAYLAND_DISPLAY"))
-    (when (null interprogram-cut-function)
-      (setq interprogram-cut-function #'my/clipboard-set))
-    (when (null interprogram-paste-function)
-      (setq interprogram-paste-function #'my/clipboard-get))))
+  "Ensure kill ring and system clipboard interoperate."
+  (setq select-enable-clipboard t
+        select-enable-primary nil
+        save-interprogram-paste-before-kill t)
+  (let ((backend (my/clipboard-backend)))
+    (cond
+     (backend
+      (setq interprogram-cut-function #'my/clipboard-set
+            interprogram-paste-function #'my/clipboard-get))
+     ((null interprogram-cut-function)
+      (setq interprogram-cut-function #'ignore)))))
 
 (defun my/tty-clipboard-setup ()
   "Setup clipboard helpers for TTY frames."
   (my/clipboard-ensure-functions)
-  (global-clipetty-mode 1))
+  (global-clipetty-mode 1)
+  (unless (display-graphic-p)
+    (require 'xt-mouse)
+    (xterm-mouse-mode 1)
+    (setq mouse-drag-copy-region 'non-empty)))
 
 (add-hook 'after-init-hook #'my/clipboard-ensure-functions)
+
+(when (eq system-type 'darwin)
+  (setq select-enable-clipboard t)
+  (global-set-key (kbd "s-c") #'kill-ring-save)
+  (global-set-key (kbd "s-x") #'kill-region)
+  (global-set-key (kbd "s-v") #'yank))
 
 ;; GC smoothing
 (use-package gcmh
