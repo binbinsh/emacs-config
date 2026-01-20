@@ -726,6 +726,15 @@
 (my/load-feature "code-navigation"
   (which-function-mode 1)
 
+  ;; 1. 全局禁用 tab，使用空格
+  (setq-default indent-tabs-mode nil)
+
+  ;; 2. 自动检测已有文件的缩进风格 (dtrt-indent)
+  (use-package dtrt-indent
+    :diminish
+    :config
+    (dtrt-indent-global-mode 1))
+
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
 
