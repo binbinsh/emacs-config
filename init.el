@@ -269,9 +269,8 @@
 ;; Dirvish: modern dired UI - loaded early for `emacs -nw .` support
 (use-package dirvish
   :demand t
-  :init
-  (require 'nerd-icons nil t)
   :custom
+  ;; nerd-icons 图标
   (dirvish-attributes '(nerd-icons vc-state subtree-state collapse file-size file-time))
   (dirvish-header-line-format '(:left (path) :right (free-space)))
   (dirvish-mode-line-format '(:left (sort omit symlink) :right (index)))
@@ -280,6 +279,9 @@
   (dirvish-hide-details t)
   (dirvish-hide-cursor t)
   (dirvish-window-fringe 8)
+  ;; 预览功能
+  (dirvish-preview-dispatchers '(image gif video audio epub archive pdf))
+  (dirvish-default-layout '(0 0.4 0.6))  ;; 左40%文件列表，右60%预览
   :config
   (dirvish-override-dired-mode)
   (with-eval-after-load 'dirvish-subtree
@@ -288,7 +290,9 @@
   (with-eval-after-load 'dirvish-side
     (setq dirvish-side-width 32
           dirvish-side-attributes '(nerd-icons subtree-state)
-          dirvish-side-header-line-format '(:left (project) :right (free-space)))))
+          dirvish-side-header-line-format '(:left (project) :right (free-space))))
+  :bind (:map dirvish-mode-map
+         ("/" . dirvish-narrow)))
 
 ;; ============================================================================
 ;; 7. VTERM TOGGLE (immediate availability)

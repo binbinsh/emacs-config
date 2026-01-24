@@ -70,7 +70,7 @@
    `(diredfl-link-priv ((t (:foreground ,purple))))
    `(diredfl-no-priv ((t (:foreground ,fg-3))))
    `(diredfl-dir-priv ((t (:foreground ,cyan))))
-   `(diredfl-read-priv ((t (:foreground ,yellow))))
+   `(diredfl-read-priv ((t (:foreground "#1a6600"))))  ;; 深绿色，更易读
    `(diredfl-write-priv ((t (:foreground ,orange))))
    `(diredfl-exec-priv ((t (:foreground ,red))))
    `(diredfl-rare-priv ((t (:foreground ,purple))))

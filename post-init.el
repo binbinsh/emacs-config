@@ -52,6 +52,17 @@
 ;; 2. UI ENHANCEMENTS
 ;; ============================================================================
 
+(my/load-feature "hl-line"
+  ;; 让光标所在行更醒目 (淡灰色，extend 延伸到整行)
+  (set-face-attribute 'hl-line nil
+                      :background "#cfd0d5"
+                      :extend t)
+  ;; dirvish 使用自己的 face
+  (with-eval-after-load 'dirvish
+    (set-face-attribute 'dirvish-hl-line nil
+                        :background "#cfd0d5"
+                        :extend t)))
+
 (my/load-feature "doom-modeline"
   (use-package doom-modeline
     :init

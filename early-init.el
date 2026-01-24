@@ -4,7 +4,19 @@
 ;; Keep it minimal: GC tuning, UI chrome, package archives, cache paths.
 ;;
 ;; Structure:
+;; 0. Terminal Compatibility
 ;; 1. GC and Startup Optimization
+
+;; ============================================================================
+;; 0. TERMINAL COMPATIBILITY
+;; ============================================================================
+
+;; Fix kitty terminal cursor position issues
+(when (string= (getenv "TERM") "xterm-kitty")
+  (setenv "TERM" "xterm-256color"))
+
+;; ============================================================================
+;; 1. GC AND STARTUP OPTIMIZATION
 ;; 2. Package Archives
 ;; 3. Cache Directory Setup
 ;; 4. UI Chrome (disable before frame creation)
