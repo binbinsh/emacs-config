@@ -11,8 +11,8 @@
 ;; 0. TERMINAL COMPATIBILITY
 ;; ============================================================================
 
-;; Fix kitty terminal cursor position issues
-(when (string= (getenv "TERM") "xterm-kitty")
+;; Fix kitty/ghostty terminal cursor position issues
+(when (member (getenv "TERM") '("xterm-kitty" "xterm-ghostty"))
   (setenv "TERM" "xterm-256color"))
 
 ;; ============================================================================
