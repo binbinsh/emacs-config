@@ -722,7 +722,101 @@
     (message "LaTeX workspace: use C-c l in .tex files")))
 
 ;; ============================================================================
-;; 12. CODE NAVIGATION AND SYNTAX
+;; 12. JSONL PREVIEW (auto pretty-print current line)
+;; ============================================================================
+
+(my/load-feature "jsonl-preview"
+  (defvar jsonl-preview--buffer-name "*JSONL Preview*")
+
+  (defun jsonl-preview--ensure-window ()
+    "Ensure preview window is visible, side based on frame size."
+    (unless (get-buffer-window jsonl-preview--buffer-name)
+      (let* ((width (frame-width))
+             (height (frame-height))
+             ;; Use right side if wide enough (>120 cols), otherwise bottom
+             (side (if (> width 120) 'right 'bottom))
+             (size (if (eq side 'right) 0.4 0.4)))
+        (display-buffer (get-buffer-create jsonl-preview--buffer-name)
+                        `(display-buffer-in-side-window
+                          (side . ,side)
+                          ,(if (eq side 'right)
+                               `(window-width . ,size)
+                             `(window-height . ,size)))))))
+
+  (defun jsonl-preview--parse-json (str)
+    "Parse JSON string STR, trying multiple methods."
+    (condition-case nil
+        ;; Try native json-parse-string first
+        (json-parse-string str :object-type 'alist)
+      (error
+       ;; Fallback to json-read-from-string
+       (condition-case nil
+           (let ((json-object-type 'alist)
+                 (json-array-type 'vector)
+                 (json-key-type 'string))
+             (json-read-from-string str))
+         (error nil)))))
+
+  (defun jsonl-preview--format-json (obj)
+    "Format parsed JSON OBJ as pretty string."
+    (with-temp-buffer
+      (let ((json-encoding-pretty-print t)
+            (json-encoding-default-indentation "  "))
+        (insert (json-encode obj)))
+      (buffer-string)))
+
+  (defun jsonl-preview--update ()
+    "Update the preview buffer with pretty JSON of current line."
+    (when (and (bound-and-true-p jsonl-preview-mode)
+               (string-suffix-p ".jsonl" (or buffer-file-name "") t))
+      (let* ((line (string-trim (or (thing-at-point 'line t) ""))))
+        (jsonl-preview--ensure-window)
+        (with-current-buffer (get-buffer-create jsonl-preview--buffer-name)
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (if (or (string-empty-p line) (< (length line) 2))
+                (insert "(empty line)")
+              (if-let ((parsed (jsonl-preview--parse-json line)))
+                  (insert (jsonl-preview--format-json parsed))
+                (insert "(invalid JSON)\n\nFirst 200 chars:\n"
+                        (substring line 0 (min 200 (length line))))))
+            (goto-char (point-min))
+            ;; Enable syntax highlighting
+            (unless (derived-mode-p 'json-ts-mode 'json-mode)
+              (if (fboundp 'json-ts-mode)
+                  (json-ts-mode)
+                (when (fboundp 'json-mode)
+                  (json-mode))))
+            (setq buffer-read-only t))))))
+
+  (defun jsonl-preview--hide ()
+    "Hide the preview window."
+    (when-let ((win (get-buffer-window jsonl-preview--buffer-name)))
+      (delete-window win)))
+
+  (define-minor-mode jsonl-preview-mode
+    "Auto preview JSONL lines as pretty JSON in side window."
+    :lighter " JP"
+    (if jsonl-preview-mode
+        (progn
+          (jsonl-preview--ensure-window)
+          (add-hook 'post-command-hook #'jsonl-preview--update nil t)
+          (jsonl-preview--update))
+      (remove-hook 'post-command-hook #'jsonl-preview--update t)
+      (jsonl-preview--hide)))
+
+  ;; Auto-enable for .jsonl files
+  (add-hook 'json-ts-mode-hook
+            (lambda ()
+              (when (string-suffix-p ".jsonl" (or buffer-file-name "") t)
+                (jsonl-preview-mode 1))))
+  (add-hook 'find-file-hook
+            (lambda ()
+              (when (string-suffix-p ".jsonl" (or buffer-file-name "") t)
+                (jsonl-preview-mode 1)))))
+
+;; ============================================================================
+;; 13. CODE NAVIGATION AND SYNTAX
 ;; ============================================================================
 
 (my/load-feature "code-navigation"

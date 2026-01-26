@@ -27,8 +27,8 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
 | **Python** | Pyright LSP, Ruff, format + organize imports on save, pytest via `uv run`, debugpy/dap-mode |
 | **Bash** | bash-language-server LSP, tree-sitter syntax highlighting |
-| **Markdown** | Live preview, syntax highlighting, pandoc integration |
 | **LaTeX** | AUCTeX with SyncTeX, doc-view PDF preview |
+| **jsonl** | JSONL line pretty preview |
 | **Clipboard** | `simpleclip` keeps macOS/Linux clipboards synced |
 
 ## Structure
