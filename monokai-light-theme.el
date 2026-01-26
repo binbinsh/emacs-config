@@ -2,11 +2,6 @@
 
 (require 'monokai-pro-theme)
 
-;;; User customization for terminal background detection
-(defvar monokai-light-terminal-bg 'auto
-  "Terminal background type. Can be 'light, 'dark, or 'auto.
-When 'auto, tries to detect from COLORFGBG environment variable.")
-
 ;;; Light terminal colors (tokyonight day theme)
 (defvar monokai-light-theme-colors
   '(;; Background / foreground tuned for tokyonight day theme
@@ -39,24 +34,6 @@ When 'auto, tries to detect from COLORFGBG environment variable.")
     :orig-blue    "#66d9ef"
     :orig-violet  "#ae81ff"
     :orig-magenta "#fd5ff0"))
-
-;;; Dark terminal colors (tokyonight night/storm theme)
-(defvar monokai-light-dark-terminal-colors
-  '(:fg         "#c0caf5"    ;; tokyonight foreground
-    :fg-1       "#a9b1d6"    ;; tokyonight foreground alt
-    :fg-2       "#7aa2f7"    ;; tokyonight blue
-    :fg-3       "#565f89"    ;; tokyonight comment
-    :fg-4       "#414868"    ;; tokyonight dark3
-    :cyan       "#7dcfff"    ;; tokyonight cyan
-    :blue       "#7aa2f7"    ;; tokyonight blue
-    :purple     "#bb9af7"    ;; tokyonight magenta
-    :orange     "#ff9e64"    ;; tokyonight orange
-    :red        "#f7768e"    ;; tokyonight red
-    :yellow     "#e0af68"    ;; tokyonight yellow
-    :green      "#9ece6a"    ;; tokyonight green
-    :green-dark "#73daca"    ;; tokyonight teal
-    :magenta    "#ff007c")   ;; tokyonight magenta2
-  "Colors optimized for dark terminal backgrounds like tokyonight night.")
 
 (deftheme monokai-light)
 (monokai-pro-theme-define 'monokai-light monokai-light-theme-colors)
@@ -125,42 +102,12 @@ When 'auto, tries to detect from COLORFGBG environment variable.")
    `(vterm-color-cyan ((t (:foreground ,cyan :background ,cyan))))
    `(vterm-color-white ((t (:foreground ,fg-3 :background "#f8f8f2"))))))
 
-;; Terminal background detection
-(defun monokai-light--detect-terminal-bg ()
-  "Detect terminal background type (light or dark).
-Returns 'light or 'dark based on COLORFGBG env var or user setting."
-  (if (eq monokai-light-terminal-bg 'auto)
-      (let ((colorfgbg (getenv "COLORFGBG")))
-        (cond
-         ;; COLORFGBG format: "fg;bg" - bg >= 8 usually means dark terminal
-         ((and colorfgbg (string-match ";\\([0-9]+\\)" colorfgbg))
-          (let ((bg-color (string-to-number (match-string 1 colorfgbg))))
-            (if (< bg-color 8) 'dark 'light)))
-         ;; Check for common dark terminal indicators
-         ((string-match-p "dark\\|night\\|storm" (or (getenv "TERM_PROGRAM") ""))
-          'dark)
-         ;; Default to dark for modern terminals
-         (t 'dark)))
-    monokai-light-terminal-bg))
-
 ;; Terminal mode: use terminal's background color instead of theme's
-;; This allows seamless integration with terminal themes like tokyonight
 (defun monokai-light-terminal-setup ()
   "Adjust faces for terminal mode to use terminal's background."
   (unless (display-graphic-p)
-    (let* ((is-dark (eq (monokai-light--detect-terminal-bg) 'dark))
-           (colors (if is-dark monokai-light-dark-terminal-colors monokai-light-theme-colors))
-           (fg     (plist-get colors :fg))
-           (fg-1   (plist-get colors :fg-1))
-           (fg-2   (plist-get colors :fg-2))
-           (fg-3   (plist-get colors :fg-3))
-           (cyan   (plist-get colors :cyan))
-           (blue   (plist-get colors :blue))
-           (purple (plist-get colors :purple))
-           (orange (plist-get colors :orange))
-           (red    (plist-get colors :red))
-           (yellow (plist-get colors :yellow))
-           (green  (plist-get colors :green)))
+    (let* ((colors monokai-light-theme-colors)
+           (bg+1   (plist-get colors :bg+1)))
 
       ;; Use terminal's background
       (set-face-background 'default "unspecified-bg")
@@ -169,91 +116,16 @@ Returns 'light or 'dark based on COLORFGBG env var or user setting."
       (when (facep 'header-line)
         (set-face-background 'header-line "unspecified-bg"))
 
-      ;; hl-line: use visible background color
-      (if is-dark
-          (progn
-            ;; Dark terminal: use darker highlight to avoid clashing with text colors
-            (set-face-attribute 'hl-line nil
-                                :background "#232433"
-                                :underline nil
-                                :extend t)
-            (when (facep 'dirvish-hl-line)
-              (set-face-attribute 'dirvish-hl-line nil
-                                  :background "#232433"
-                                  :underline nil
-                                  :extend t)))
-        ;; Light terminal
-        (set-face-attribute 'hl-line nil
+      ;; hl-line: use visible background color for light terminal
+      (set-face-attribute 'hl-line nil
+                          :background "#cfd0d5"
+                          :underline nil
+                          :extend t)
+      (when (facep 'dirvish-hl-line)
+        (set-face-attribute 'dirvish-hl-line nil
                             :background "#cfd0d5"
                             :underline nil
-                            :extend t)
-        (when (facep 'dirvish-hl-line)
-          (set-face-attribute 'dirvish-hl-line nil
-                              :background "#cfd0d5"
-                              :underline nil
-                              :extend t)))
-
-      ;; Apply foreground colors based on terminal background
-      (when is-dark
-        ;; Core faces
-        (set-face-foreground 'default fg)
-        (set-face-foreground 'font-lock-comment-face fg-3)
-        (set-face-foreground 'font-lock-string-face green)
-        (set-face-foreground 'font-lock-keyword-face purple)
-        (set-face-foreground 'font-lock-function-name-face blue)
-        (set-face-foreground 'font-lock-variable-name-face fg)
-        (set-face-foreground 'font-lock-type-face cyan)
-        (set-face-foreground 'font-lock-constant-face orange)
-        (set-face-foreground 'font-lock-builtin-face red)
-        (set-face-foreground 'font-lock-warning-face yellow)
-
-        ;; Line numbers
-        (set-face-foreground 'line-number fg-3)
-        (set-face-foreground 'line-number-current-line fg)
-
-        ;; Dired faces
-        (when (facep 'dired-directory)
-          (set-face-foreground 'dired-directory cyan))
-        (when (facep 'dired-symlink)
-          (set-face-foreground 'dired-symlink purple))
-
-        ;; Diredfl faces
-        (when (facep 'diredfl-dir-name)
-          (set-face-foreground 'diredfl-dir-name cyan))
-        (when (facep 'diredfl-file-name)
-          (set-face-foreground 'diredfl-file-name fg))
-        (when (facep 'diredfl-file-suffix)
-          (set-face-foreground 'diredfl-file-suffix fg-2))
-        (when (facep 'diredfl-symlink)
-          (set-face-foreground 'diredfl-symlink purple))
-        (when (facep 'diredfl-dir-priv)
-          (set-face-foreground 'diredfl-dir-priv cyan))
-        (when (facep 'diredfl-read-priv)
-          (set-face-foreground 'diredfl-read-priv green))
-        (when (facep 'diredfl-write-priv)
-          (set-face-foreground 'diredfl-write-priv orange))
-        (when (facep 'diredfl-exec-priv)
-          (set-face-foreground 'diredfl-exec-priv red))
-        (when (facep 'diredfl-number)
-          (set-face-foreground 'diredfl-number fg-2))
-        (when (facep 'diredfl-date-time)
-          (set-face-foreground 'diredfl-date-time fg-3))
-        (when (facep 'diredfl-no-priv)
-          (set-face-foreground 'diredfl-no-priv fg-3))
-
-        ;; Minibuffer / completion
-        (when (facep 'minibuffer-prompt)
-          (set-face-foreground 'minibuffer-prompt blue))
-
-        ;; Mode line - need both foreground and background for visibility
-        (when (facep 'mode-line)
-          (set-face-attribute 'mode-line nil
-                              :foreground "#c0caf5"
-                              :background "#1a1b26"))
-        (when (facep 'mode-line-inactive)
-          (set-face-attribute 'mode-line-inactive nil
-                              :foreground "#565f89"
-                              :background "#16161e"))))))
+                            :extend t)))))
 
 (add-hook 'after-init-hook #'monokai-light-terminal-setup)
 (add-hook 'after-make-frame-functions
