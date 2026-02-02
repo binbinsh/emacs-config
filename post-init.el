@@ -216,10 +216,10 @@
     (add-hook 'completion-at-point-functions #'cape-file)
     (add-hook 'completion-at-point-functions #'cape-dabbrev)
     (add-hook 'completion-at-point-functions #'cape-keyword))
-  (use-package kind-icon
+  ;; Use nerd-icons for corfu completion icons
+  (use-package nerd-icons-corfu
     :after corfu
-    :init (setq kind-icon-default-face 'corfu-default)
-    :config (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
+    :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)))
 
 ;; ============================================================================
 ;; 4. HELP AND DOCUMENTATION

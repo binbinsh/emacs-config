@@ -250,7 +250,7 @@
         (when emoji (set-fontset-font t 'symbol (font-spec :name emoji) nil 'prepend))
         ;; Powerline symbols (U+E0A0-U+E0D4) - use Nerd Font
         (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family english))
-        ;; Private Use Area for additional icons
+        ;; Private Use Area for nerd-icons
         (set-fontset-font t '(#xf000 . #xf8ff) (font-spec :family english))
         (setq nerd-icons-font-family "Symbols Nerd Font Mono")))))
 
