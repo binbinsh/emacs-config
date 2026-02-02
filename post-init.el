@@ -157,7 +157,8 @@
   (use-package vertico
     :init
     (vertico-mode 1)
-    (setq vertico-cycle t))
+    (setq vertico-cycle t
+          vertico-preselect 'prompt))
   (use-package vertico-posframe
     :if (display-graphic-p)
     :after vertico
