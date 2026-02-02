@@ -55,7 +55,7 @@
    'monokai-light
 
    ;; Dired - directory colors (use cyan for better visibility on light bg)
-   `(dired-directory ((t (:foreground ,cyan :weight semi-bold))))
+   `(dired-directory ((t (:foreground ,cyan :weight light))))
    `(dired-symlink ((t (:foreground ,purple))))
    `(dired-perm-write ((t (:foreground ,orange))))
    `(dired-marked ((t (:foreground ,red :weight bold))))
@@ -63,7 +63,7 @@
    `(dired-header ((t (:foreground ,fg :weight bold))))
 
    ;; Diredfl - enhanced dired colors
-   `(diredfl-dir-name ((t (:foreground ,cyan :weight semi-bold))))
+   `(diredfl-dir-name ((t (:foreground ,cyan :weight light))))
    `(diredfl-dir-heading ((t (:foreground ,fg :weight bold :background ,bg+1))))
    `(diredfl-file-name ((t (:foreground ,fg))))
    `(diredfl-file-suffix ((t (:foreground ,fg-2))))

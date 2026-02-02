@@ -258,7 +258,12 @@
   ;; Visuals
   (add-hook 'dired-mode-hook (lambda ()
     (when (fboundp 'dired-hide-details-mode) (dired-hide-details-mode 1))
-    (hl-line-mode 1)))
+    (hl-line-mode 1)
+    ;; 增加行间距
+    (setq-local line-spacing 0.5)
+    ;; GUI 模式下使用 JetBrains Mono Light
+    (when (display-graphic-p)
+      (face-remap-add-relative 'default :family "JetBrains Mono" :weight 'light :height 1.3))))
 
   (use-package diredfl :hook (dired-mode . diredfl-mode))
   (use-package dired-git-info :defer t :commands dired-git-info-mode)
