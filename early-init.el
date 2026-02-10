@@ -41,6 +41,12 @@
 (set-language-environment "UTF-8")
 (prefer-coding-system 'utf-8)
 
+;; Treat East Asian Ambiguous width characters as single-width.
+;; `set-language-environment' sets `cjk-ambiguous-chars-are-wide' to t,
+;; which makes box-drawing, block elements, geometric shapes etc. double-width,
+;; causing ASCII art misalignment in monospace fonts.
+(setq cjk-ambiguous-chars-are-wide nil)
+
 ;; ============================================================================
 ;; 2. PACKAGE ARCHIVES
 ;; ============================================================================

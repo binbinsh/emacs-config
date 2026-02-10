@@ -247,7 +247,7 @@
         (set-face-attribute 'default nil :font (font-spec :family english :size 15 :weight 'light))
         (dolist (charset '(han kana cjk-misc bopomofo))
           (set-fontset-font t charset (font-spec :name cjk)))
-        (when emoji (set-fontset-font t 'symbol (font-spec :name emoji) nil 'prepend))
+        (when emoji (set-fontset-font t 'emoji (font-spec :name emoji) nil 'prepend))
         ;; Powerline symbols (U+E0A0-U+E0D4) - use Nerd Font
         (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family english))
         ;; Private Use Area for nerd-icons
