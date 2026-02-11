@@ -511,7 +511,7 @@
         (dirvish dir)
       (dired dir))))
 
-(global-set-key (kbd "C-c s") #'my/remote-dired)
+(global-set-key (kbd "C-c h") #'my/remote-dired)
 
 ;; ============================================================================
 ;; 7. GIT INTEGRATION (MAGIT)
@@ -706,6 +706,46 @@
   (setq doc-view-continuous t
         doc-view-resolution 180
         doc-view-use-scaling t)
+
+  ;; Open binary files with system default apps (handles TRAMP remote files)
+  (defvar my/external-file-extensions
+    '("pdf" "wav" "mp3" "flac" "ogg" "aac" "m4a" "wma"
+      "mp4" "mkv" "avi" "mov" "wmv" "webm" "flv"
+      "docx" "doc" "xlsx" "xls" "pptx" "ppt")
+    "File extensions to open with system default application.")
+
+  (defun my/open-externally (file)
+    "Open FILE with system default app. For remote files, copy to local temp first."
+    (interactive (list (or (dired-get-filename nil t) (buffer-file-name) (read-file-name "File: "))))
+    (let* ((local-file
+            (if (file-remote-p file)
+                (let* ((ext (file-name-extension file))
+                       (tmp (make-temp-file "emacs-remote-" nil (when ext (concat "." ext)))))
+                  (copy-file file tmp t)
+                  tmp)
+              (expand-file-name file))))
+      (start-process "open-external" nil "open" local-file)))
+
+  (defun my/external-file-p (filename)
+    "Return non-nil if FILENAME should be opened externally."
+    (member (downcase (or (file-name-extension filename) ""))
+            my/external-file-extensions))
+
+  ;; Advise find-file to open matching files externally
+  (define-advice find-file (:around (orig-fn filename &rest args) external-open)
+    (if (my/external-file-p filename)
+        (my/open-externally filename)
+      (apply orig-fn filename args)))
+
+  ;; Make dired `!' smart: remote files auto-copy to local and open
+  (defun my/dired-do-open (arg)
+    "Open marked (or current) files with system app. Handles remote files."
+    (interactive "P")
+    (let ((files (dired-get-marked-files t arg)))
+      (if (file-remote-p default-directory)
+          (dolist (f files) (my/open-externally f))
+        (dolist (f files)
+          (start-process "open-external" nil "open" (expand-file-name f))))))
 
   (use-package tex
     :ensure auctex
@@ -995,7 +1035,6 @@
     (let ((map magit-mode-map))
       (define-key map (kbd "C-c G") #'magit-list-repositories)
       (define-key map (kbd "C-c b") #'magit-log-all)
-      (define-key map (kbd "C-c h") #'magit-log-buffer-file)
       (define-key map (kbd "C-c B") #'magit-blame)))
 
   ;; Python keybindings

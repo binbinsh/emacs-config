@@ -87,7 +87,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | `C-c n` | New tab |
 | `C-c x` | Close tab |
 | `C-c B` | Project compile |
-| `C-c s` | SSH remote dired |
+| `C-c h` | SSH remote dired |
 
 ### Git hunk navigation
 
@@ -144,7 +144,6 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | Python | `C-c t` | Run pytest |
 | Markdown | `C-c l` | Live preview |
 | Magit | `C-c b` | Branch graph |
-| Magit | `C-c h` | File history |
 | Magit | `C-c B` | Toggle blame |
 
 ## Dependencies
