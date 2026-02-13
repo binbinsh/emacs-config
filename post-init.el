@@ -261,9 +261,9 @@
     (hl-line-mode 1)
     ;; 增加行间距
     (setq-local line-spacing 0.5)
-    ;; GUI 模式下使用 JetBrains Mono Light
+    ;; 保持全局默认字体，避免在 dired 里额外放大
     (when (display-graphic-p)
-      (face-remap-add-relative 'default :family "JetBrains Mono" :weight 'light :height 1.3))))
+      (face-remap-add-relative 'default :height 1.0))))
 
   (use-package diredfl :hook (dired-mode . diredfl-mode))
   (use-package dired-git-info :defer t :commands dired-git-info-mode)

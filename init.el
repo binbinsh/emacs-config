@@ -232,19 +232,42 @@
   "Return first available font from FONTS list."
   (cl-find-if (lambda (f) (find-font (font-spec :name f))) fonts))
 
+(defvar my/bundled-monaco-font-ensured nil
+  "Non-nil once bundled Monaco installation has been attempted this session.")
+
+(defun my/ensure-bundled-monaco-font ()
+  "Install bundled Monaco font for current user, preferring repo copy."
+  (unless my/bundled-monaco-font-ensured
+    (setq my/bundled-monaco-font-ensured t)
+    (let* ((source (expand-file-name "assets/Monaco.ttf" user-emacs-directory))
+           (dest-dir (cond
+                      ((eq system-type 'darwin) (expand-file-name "~/Library/Fonts"))
+                      ((eq system-type 'gnu/linux) (expand-file-name "~/.local/share/fonts"))
+                      (t nil)))
+           (dest (and dest-dir (expand-file-name "Monaco.ttf" dest-dir))))
+      (when (and dest (file-exists-p source))
+        (make-directory dest-dir t)
+        (copy-file source dest t)
+        (when (and (eq system-type 'gnu/linux) (executable-find "fc-cache"))
+          (call-process "fc-cache" nil nil nil "-f" dest-dir))
+        (when (fboundp 'clear-font-cache)
+          (clear-font-cache))))))
+
 (defun my/apply-fonts (&optional frame)
   "Apply preferred fonts to FRAME."
   (with-selected-frame (or frame (selected-frame))
     (when (display-graphic-p)
-      (let* ((english (or (my/find-first-font '("JetBrainsMono Nerd Font Mono"
-                                                "JetBrainsMono Nerd Font"
-                                                "JetBrains Mono"
-                                                "SF Mono"
-                                                "Menlo"))
-                          "JetBrains Mono"))
+      (my/ensure-bundled-monaco-font)
+      (let* ((system-default-english-candidates
+              (cond
+               ((eq system-type 'darwin) '("SF Mono" "Menlo"))
+               ((eq system-type 'gnu/linux) '("Ubuntu Mono" "DejaVu Sans Mono" "Monospace"))
+               (t '("Monospace"))))
+             (english (or (my/find-first-font (append '("Monaco") system-default-english-candidates))
+                          (car system-default-english-candidates)))
              (cjk (or (my/find-first-font '("PingFang SC" "Noto Sans CJK SC")) "Noto Sans CJK SC"))
              (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))))
-        (set-face-attribute 'default nil :font (font-spec :family english :size 15 :weight 'light))
+        (set-face-attribute 'default nil :font (font-spec :family english :size 14))
         (dolist (charset '(han kana cjk-misc bopomofo))
           (set-fontset-font t charset (font-spec :name cjk)))
         (when emoji (set-fontset-font t 'emoji (font-spec :name emoji) nil 'prepend))
