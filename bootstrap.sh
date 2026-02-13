@@ -32,26 +32,15 @@ install_macos() {
     [ -d "/usr/local/bin" ] && ensure_path "/usr/local/bin"
   fi
 
-  # Install Emacs via emacs-plus tap (latest beta)
-  brew tap d12frosted/emacs-plus >/dev/null 2>&1 || true
-  if ! brew list emacs-plus@31 >/dev/null 2>&1; then
-    info "Installing emacs-plus@31 (beta)"
-    brew install emacs-plus@31 || warn "Failed to install emacs-plus@31"
+  # Install Emacs app (Homebrew cask)
+  if ! brew list --cask emacs-app >/dev/null 2>&1; then
+    info "Installing emacs-app cask"
+    brew install --cask emacs-app || warn "Failed to install emacs-app cask"
   else
-    info "emacs-plus@31 already installed"
+    info "emacs-app already installed"
   fi
 
-  # Symlink Emacs.app into /Applications for Spotlight/Launchpad
-  brew_prefix="$(brew --prefix)"
-  app_src="$brew_prefix/opt/emacs-plus@31/Emacs.app"
-  if [ ! -d "$app_src" ]; then
-    app_src="$(ls -d "$brew_prefix"/opt/emacs-plus@*/Emacs.app 2>/dev/null | head -n1 || true)"
-  fi
-  if [ -d "$app_src" ]; then
-    ln -sfn "$app_src" /Applications/Emacs.app || true
-  else
-    warn "Emacs.app not found under emacs-plus prefix; skip /Applications symlink"
-  fi
+  # emacs-app cask handles /Applications linkage automatically.
 
   # CLI deps
   brew install git ripgrep fd cmake pkg-config libtool git-delta || true
@@ -167,7 +156,8 @@ setup_treesitter() {
             (tsx \"https://github.com/tree-sitter/tree-sitter-typescript\" \"v0.23.2\" \"tsx/src\")
             (json \"https://github.com/tree-sitter/tree-sitter-json\" \"v0.24.8\")
             (go \"https://github.com/tree-sitter/tree-sitter-go\" \"v0.23.4\")
-            (rust \"https://github.com/tree-sitter/tree-sitter-rust\" \"v0.23.3\")))
+            (rust \"https://github.com/tree-sitter/tree-sitter-rust\" \"v0.23.3\")
+            (dart \"https://github.com/ast-grep/tree-sitter-dart\" \"master\")))
     (dolist (lang (mapcar #'car treesit-language-source-alist))
       (unless (treesit-language-available-p lang)
         (message \"Compiling grammar: %s\" lang)

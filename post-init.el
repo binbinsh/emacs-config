@@ -627,20 +627,47 @@
             (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
             (json "https://github.com/tree-sitter/tree-sitter-json" "v0.24.8")
             (go "https://github.com/tree-sitter/tree-sitter-go" "v0.23.4")
-            (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.23.3")))
+            (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.23.3")
+            (dart "https://github.com/ast-grep/tree-sitter-dart" "master")))
     ;; Mode remapping
-    (dolist (pair '((python-mode . python-ts-mode)
+    (let ((remaps '((python-mode . python-ts-mode)
                     (js-mode . js-ts-mode)
                     (typescript-mode . typescript-ts-mode)
                     (go-mode . go-ts-mode)
                     (rust-mode . rust-ts-mode)
-                    (bash-mode . bash-ts-mode)))
-      (add-to-list 'major-mode-remap-alist pair))))
+                    (bash-mode . bash-ts-mode))))
+      (when (fboundp 'dart-ts-mode)
+        (push '(dart-mode . dart-ts-mode) remaps))
+      (dolist (pair remaps)
+        (add-to-list 'major-mode-remap-alist pair))))
 
   ;; LSP hooks for ts-modes
-  (dolist (mode '(python-ts-mode js-ts-mode typescript-ts-mode tsx-ts-mode
-                  go-ts-mode rust-ts-mode bash-ts-mode json-ts-mode))
-    (add-hook (intern (concat (symbol-name mode) "-hook")) #'lsp-deferred))
+  (let ((ts-modes '(python-ts-mode js-ts-mode typescript-ts-mode tsx-ts-mode
+                    go-ts-mode rust-ts-mode bash-ts-mode json-ts-mode)))
+    (when (fboundp 'dart-ts-mode)
+      (setq ts-modes (append ts-modes '(dart-ts-mode))))
+    (dolist (mode ts-modes)
+      (add-hook (intern (concat (symbol-name mode) "-hook")) #'lsp-deferred))))
+
+(my/load-feature "dart"
+  (use-package dart-mode
+    :mode ("\\.dart\\'" . dart-mode))
+
+  (use-package lsp-dart
+    :after (lsp-mode dart-mode))
+
+  (defun my/dart-enable-treesit-parser ()
+    "Enable Dart tree-sitter parser in dart-mode when available."
+    (when (and (fboundp 'treesit-parser-create)
+               (fboundp 'treesit-language-available-p)
+               (treesit-language-available-p 'dart))
+      (ignore-errors
+        (treesit-parser-create 'dart))))
+
+  (add-hook 'dart-mode-hook #'my/dart-enable-treesit-parser)
+
+  ;; Fallback path when dart-ts-mode is unavailable in this Emacs build.
+  (add-hook 'dart-mode-hook #'lsp-deferred))
 
 (my/load-feature "web-mode"
   (use-package web-mode

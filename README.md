@@ -24,9 +24,10 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | **Remote** | TRAMP with 1Password SSH agent, fast `sshx` method, quick host selection |
 | **Terminal** | Integrated vterm terminal panel |
 | **Git** | Magit, gitflow, inline blame (blamer), delta diffs, diff-hl gutter |
-| **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, JSON, Web |
+| **Languages** | Tree-sitter grammars (pinned to v14), LSP hooks for Python, JS/TS, Go, Rust, Bash, Dart, JSON, Web |
 | **Python** | Pyright LSP, Ruff, format + organize imports on save, pytest via `uv run`, debugpy/dap-mode |
 | **Bash** | bash-language-server LSP, tree-sitter syntax highlighting |
+| **Dart** | `dart-mode` syntax highlighting, `lsp-dart`, tree-sitter grammar precompiled |
 | **LaTeX** | AUCTeX with SyncTeX, doc-view PDF preview |
 | **jsonl** | JSONL line pretty preview |
 | **Clipboard** | `simpleclip` keeps macOS/Linux clipboards synced |
@@ -47,7 +48,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 ## What bootstrap.sh Installs
 
 **macOS (via Homebrew):**
-- emacs-plus (symlinked to /Applications)
+- emacs-app (Homebrew cask, installed to /Applications)
 - git, ripgrep, fd, cmake, pkg-config, libtool, git-delta
 - JetBrainsMono Nerd Font, Symbols Nerd Font Mono
 
