@@ -259,11 +259,24 @@
   (add-hook 'dired-mode-hook (lambda ()
     (when (fboundp 'dired-hide-details-mode) (dired-hide-details-mode 1))
     (hl-line-mode 1)
-    ;; 增加行间距
-    (setq-local line-spacing 0.5)
+    ;; 增加行间距，但保持高亮行文字在垂直方向居中。
+    ;; 使用 line-height 属性在上/下各加一半间距（line-spacing 只会加在下方）。
+    (setq-local line-spacing nil)
+    (when (display-graphic-p)
+      (let ((inhibit-read-only t))
+        (add-text-properties (point-min) (point-max)
+                             '(line-height (1.3 1.6)))))
     ;; 保持全局默认字体，避免在 dired 里额外放大
     (when (display-graphic-p)
       (face-remap-add-relative 'default :height 1.0))))
+
+  (defun my/dired-apply-line-height ()
+    "Apply balanced line height for Dired listings."
+    (when (display-graphic-p)
+      (let ((inhibit-read-only t))
+        (add-text-properties (point-min) (point-max)
+                             '(line-height (1.3 1.6))))))
+  (add-hook 'dired-after-readin-hook #'my/dired-apply-line-height)
 
   (use-package diredfl :hook (dired-mode . diredfl-mode))
   (use-package dired-git-info :defer t :commands dired-git-info-mode)
