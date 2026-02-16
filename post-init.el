@@ -606,6 +606,8 @@
     :commands lsp-deferred
     :init
     (setq lsp-warn-no-matched-clients nil
+          lsp-auto-guess-root t
+          lsp-guess-root-without-session t
           lsp-headerline-breadcrumb-enable t
           lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 
