@@ -42,11 +42,24 @@
   (declare (indent 1))
   `(progn
      (setq my/post-init-delay (+ my/post-init-delay 0.05))
-     (run-with-idle-timer my/post-init-delay nil
-                          (lambda ()
-                            (condition-case err
-                                (progn ,@body)
-                              (error (message "Error loading %s: %s" ,name err)))))))
+     (let ((module-delay my/post-init-delay)
+           (module-name ,name))
+       (when (fboundp 'my/startup-profile-register-module)
+         (my/startup-profile-register-module module-name module-delay))
+       (run-with-idle-timer module-delay nil
+                            (lambda ()
+                              (let ((module-begin (current-time)))
+                                (condition-case err
+                                    (progn
+                                      ,@body
+                                      (when (fboundp 'my/startup-profile-record-module)
+                                        (my/startup-profile-record-module
+                                         module-name module-begin (current-time) 'ok)))
+                                  (error
+                                   (when (fboundp 'my/startup-profile-record-module)
+                                     (my/startup-profile-record-module
+                                      module-name module-begin (current-time) 'error))
+                                   (message "Error loading %s: %s" module-name err)))))))))
 
 ;; ============================================================================
 ;; 2. UI ENHANCEMENTS
@@ -251,9 +264,17 @@
   (setq dired-dwim-target t
         dired-recursive-deletes 'always
         dired-recursive-copies 'always
-        dired-listing-switches "-alh"
+        dired-listing-switches "-la"
         global-auto-revert-non-file-buffers t)
+  (defconst my/dired-remote-listing-switches "-la"
+    "ls switch set compatible with most ls variants for TRAMP previews.")
+  (defun my/dired-setup-remote-listing-compat ()
+    "Use ls-compatible options on remote hosts."
+    (when (file-remote-p default-directory)
+      (setq-local dired-use-ls-dired nil)
+      (setq-local dired-listing-switches my/dired-remote-listing-switches)))
   (add-hook 'dired-mode-hook #'auto-revert-mode)
+  (add-hook 'dired-mode-hook #'my/dired-setup-remote-listing-compat)
 
   ;; Visuals
   (add-hook 'dired-mode-hook (lambda ()

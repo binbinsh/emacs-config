@@ -91,14 +91,191 @@
 ;; Disable custom file (write to cache, never load)
 (setq custom-file (expand-file-name "custom.el" my-emacs-cache-directory))
 
+;; TRAMP async previews for SSH connections (Dirvish/Dired remote previews).
+(with-eval-after-load 'tramp
+  (connection-local-set-profile-variables
+   'remote-direct-async-process
+   '((tramp-direct-async-process . t)))
+  (connection-local-set-profiles
+   '(:application tramp :protocol "ssh")
+   'remote-direct-async-process))
+
 ;; ============================================================================
 ;; 4. ESSENTIAL UI (SYNCHRONOUS)
 ;; ============================================================================
 
-(setq inhibit-startup-screen t)
+(setq inhibit-startup-screen nil)
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq frame-resize-pixelwise t)
 (setq column-number-mode t)
+
+(defconst my/startup-profile-buffer-name "*GNU Emacs*"
+  "Name of the default Emacs startup buffer.")
+
+(defvar my/startup-profile-modules (make-hash-table :test 'equal)
+  "Hashtable mapping module names to startup profiling plists.")
+
+(defvar my/startup-profile-module-order nil
+  "Module names in registration order.")
+
+(defvar my/startup-profile--region nil
+  "Cons cell of markers delimiting the startup profile section.")
+
+(defvar my/startup-profile--refresh-timer nil
+  "Timer used to coalesce startup profile redraws.")
+
+(defun my/display-startup-screen (&optional concise)
+  "Display a minimal startup screen with profiling only."
+  (let ((splash-buffer (get-buffer-create my/startup-profile-buffer-name)))
+    (with-current-buffer splash-buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (setq default-directory
+              (if (boundp 'command-line-default-directory)
+                  command-line-default-directory
+                default-directory))
+        (when (boundp 'splash-screen-keymap)
+          (use-local-map splash-screen-keymap))
+        (setq tab-width 8
+              buffer-read-only t)
+        (set-buffer-modified-p nil)))
+    (if concise
+        (display-buffer splash-buffer)
+      (switch-to-buffer splash-buffer)))
+  (my/startup-profile-refresh))
+
+(advice-add 'display-startup-screen :override #'my/display-startup-screen)
+
+(defun my/startup-profile-register-module (name scheduled-delay)
+  "Register startup module NAME with SCHEDULED-DELAY in seconds."
+  (unless (member name my/startup-profile-module-order)
+    (setq my/startup-profile-module-order
+          (append my/startup-profile-module-order (list name))))
+  (let ((entry (or (gethash name my/startup-profile-modules) (list :name name))))
+    (setq entry (plist-put entry :status 'pending))
+    (setq entry (plist-put entry :scheduled-delay scheduled-delay))
+    (puthash name entry my/startup-profile-modules))
+  (my/startup-profile-queue-refresh))
+
+(defun my/startup-profile-record-module (name begin end &optional status)
+  "Record startup runtime for module NAME between BEGIN and END."
+  (let* ((entry (or (gethash name my/startup-profile-modules) (list :name name)))
+         (elapsed (float-time (time-subtract end begin)))
+         (since-start (float-time (time-subtract end before-init-time))))
+    (setq entry (plist-put entry :status (or status 'ok)))
+    (setq entry (plist-put entry :elapsed elapsed))
+    (setq entry (plist-put entry :since-start since-start))
+    (puthash name entry my/startup-profile-modules))
+  (my/startup-profile-queue-refresh))
+
+(defun my/startup-profile--entries ()
+  "Return startup profiling entries sorted by module runtime."
+  (let (entries)
+    (dolist (name my/startup-profile-module-order)
+      (let ((entry (copy-sequence
+                    (or (gethash name my/startup-profile-modules)
+                        (list :name name)))))
+        (setq entry (plist-put entry :name name))
+        (push entry entries)))
+    (sort (nreverse entries)
+          (lambda (a b)
+            (let ((a-elapsed (plist-get a :elapsed))
+                  (b-elapsed (plist-get b :elapsed)))
+              (cond
+               ((and a-elapsed b-elapsed) (> a-elapsed b-elapsed))
+               (a-elapsed t)
+               (b-elapsed nil)
+               (t (< (or (plist-get a :scheduled-delay) 0.0)
+                     (or (plist-get b :scheduled-delay) 0.0)))))))))
+
+(defun my/startup-profile--bar (value max-value width)
+  "Return a WIDTH-char ASCII bar for VALUE relative to MAX-VALUE."
+  (let* ((safe-max (max max-value 0.0001))
+         (filled (min width (max 0 (round (* width (/ value safe-max))))))
+         (empty (max 0 (- width filled))))
+    (concat (make-string filled ?#) (make-string empty ?-))))
+
+(defun my/startup-profile--render ()
+  "Render startup profile text."
+  (let* ((entries (my/startup-profile--entries))
+         (init-end (or after-init-time (current-time)))
+         (total-init (float-time (time-subtract init-end before-init-time)))
+         (loaded-count 0)
+         (max-elapsed 0.0)
+         (table-lines nil))
+    (dolist (entry entries)
+      (let ((elapsed (plist-get entry :elapsed)))
+        (when elapsed
+          (setq loaded-count (1+ loaded-count))
+          (setq max-elapsed (max max-elapsed elapsed)))))
+    (dolist (entry entries)
+      (let* ((name (or (plist-get entry :name) "unknown"))
+             (elapsed (plist-get entry :elapsed))
+             (since-start (plist-get entry :since-start))
+             (status (or (plist-get entry :status) 'pending))
+             (bar (my/startup-profile--bar (or elapsed 0.0) max-elapsed 18)))
+        (push (format "%-20s %9s %9s %8s |%s|"
+                      (truncate-string-to-width name 20 nil nil t)
+                      (if elapsed (format "%.1f" (* elapsed 1000.0)) "--")
+                      (if since-start (format "%.1f" (* since-start 1000.0)) "--")
+                      (upcase (symbol-name status))
+                      bar)
+              table-lines)))
+    (setq table-lines (nreverse table-lines))
+    (concat
+     "Startup Performance\n"
+     "-------------------\n"
+     (format "Total init: %.3fs | GC cycles: %d | Modules loaded: %d/%d\n"
+             total-init gcs-done loaded-count (length entries))
+     "self(ms)=module runtime, at+(ms)=time since Emacs process start\n"
+     "relative=bar scaled to the slowest module (# means heavier)\n\n"
+     (format "%-20s %9s %9s %8s %s\n" "Module" "self(ms)" "at+(ms)" "status" "relative")
+     (make-string 76 ?-)
+     "\n"
+     (if table-lines
+         (mapconcat #'identity table-lines "\n")
+       "No post-init modules registered yet."))))
+
+(defun my/startup-profile-refresh ()
+  "Refresh startup profile in the default startup buffer."
+  (setq my/startup-profile--refresh-timer nil)
+  (let ((buffer (get-buffer my/startup-profile-buffer-name)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (let ((inhibit-read-only t)
+              (section (concat "\n" (my/startup-profile--render) "\n")))
+          (if (and my/startup-profile--region
+                   (markerp (car my/startup-profile--region))
+                   (markerp (cdr my/startup-profile--region))
+                   (eq (marker-buffer (car my/startup-profile--region)) (current-buffer))
+                   (eq (marker-buffer (cdr my/startup-profile--region)) (current-buffer)))
+              (let ((start (car my/startup-profile--region))
+                    (end (cdr my/startup-profile--region)))
+                (delete-region start end)
+                (goto-char start)
+                (let ((new-start (point)))
+                  (insert section)
+                  (set-marker (car my/startup-profile--region) new-start)
+                  (set-marker (cdr my/startup-profile--region) (point))))
+            (goto-char (point-max))
+            (unless (bolp) (insert "\n"))
+            (let ((start (point)))
+              (insert section)
+              (setq my/startup-profile--region
+                    (cons (copy-marker start t)
+                          (copy-marker (point) nil)))))
+          (set-buffer-modified-p nil))))))
+
+(defun my/startup-profile-queue-refresh ()
+  "Queue startup profile redraw."
+  (when (timerp my/startup-profile--refresh-timer)
+    (cancel-timer my/startup-profile--refresh-timer))
+  (setq my/startup-profile--refresh-timer
+        (run-with-idle-timer 0.03 nil #'my/startup-profile-refresh)))
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (run-with-idle-timer 0 nil #'my/startup-profile-refresh)))
 
 ;; Smooth scrolling
 (pixel-scroll-precision-mode 1)
