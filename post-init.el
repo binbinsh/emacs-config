@@ -65,8 +65,6 @@
 ;; 2. UI ENHANCEMENTS
 ;; ============================================================================
 
-;; hl-line 配置已移至 monokai-light-theme.el
-
 (my/load-feature "doom-modeline"
   (use-package doom-modeline
     :init

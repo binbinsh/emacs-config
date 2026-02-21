@@ -397,10 +397,7 @@
 ;; Load theme synchronously (user sees this immediately)
 (use-package monokai-pro-theme
   :config
-  (add-to-list 'custom-theme-load-path user-emacs-directory)
-  (unless (custom-theme-p 'monokai-light)
-    (load (expand-file-name "monokai-light-theme.el" user-emacs-directory) nil t))
-  (load-theme 'monokai-light t))
+  (load-theme 'monokai-pro-octagon t))
 
 ;; Font setup
 (require 'cl-lib)
