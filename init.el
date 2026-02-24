@@ -24,6 +24,8 @@
 
 ;; Better subprocess I/O throughput (benefits LSP)
 (setq read-process-output-max (* 3 1024 1024))
+;; Warn only for very large files (1GB)
+(setq large-file-warning-threshold (* 1024 1024 1024))
 
 ;; ~/.local/bin for uv and other tools
 (let ((local-bin (expand-file-name "~/.local/bin")))
@@ -97,8 +99,49 @@
    'remote-direct-async-process
    '((tramp-direct-async-process . t)))
   (connection-local-set-profiles
-   '(:application tramp :protocol "ssh")
-   'remote-direct-async-process))
+   '(:application tramp :protocol "sshx")
+   'remote-direct-async-process)
+  (with-eval-after-load 'tramp-sh
+    ;; Enable `direct-async' for sshx.  Upstream sshx lacks this method
+    ;; parameter, so Dirvish marks remote preview as unsupported.
+    (when-let ((entry (assoc "sshx" tramp-methods)))
+      (unless (assoc 'tramp-direct-async (cdr entry))
+        (setcdr entry
+                (append (cdr entry)
+                        '((tramp-direct-async ("-t" "-t")))))))
+
+    ;; In direct-async path, sshx expands `RemoteCommand="%l"` with empty %l,
+    ;; which makes ssh exit 255 ("Cannot execute command-line and remote command").
+    ;; Strip only this empty option for Tramp-generated async ssh commands.
+    (defun my/tramp-strip-empty-remotecommand-option (command)
+      "Remove ssh `-o RemoteCommand=\"\"' pair from COMMAND list."
+      (let (out)
+        (while command
+          (if (and (equal (car command) "-o")
+                   (cadr command)
+                   (string= (cadr command) "RemoteCommand=\"\""))
+              (setq command (cddr command))
+            (push (car command) out)
+            (setq command (cdr command))))
+        (nreverse out)))
+
+    (defun my/tramp-fix-sshx-direct-async-command (orig &rest args)
+      "Rewrite problematic sshx direct-async command before `make-process'."
+      (let* ((plist (copy-sequence args))
+             (command (plist-get plist :command))
+             (payload (and (consp command) (car (last command)))))
+        (when (and (consp command)
+                   (stringp (car command))
+                   (string= (car command) "ssh")
+                   (member "RemoteCommand=\"\"" command)
+                   (stringp payload)
+                   (string-match-p "INSIDE_EMACS\\\\=" payload))
+          (setq command (my/tramp-strip-empty-remotecommand-option command))
+          (setq plist (plist-put plist :command command)))
+        (apply orig plist)))
+
+    (unless (advice-member-p #'my/tramp-fix-sshx-direct-async-command #'make-process)
+      (advice-add 'make-process :around #'my/tramp-fix-sshx-direct-async-command))))
 
 ;; ============================================================================
 ;; 4. ESSENTIAL UI (SYNCHRONOUS)
@@ -457,10 +500,11 @@
 ;; 6. DIRED ENHANCEMENT (immediate for emacs -nw .)
 ;; ============================================================================
 
-;; Dired sorting: directories first
-(setq ls-lisp-use-insert-directory-program nil)
+;; Dired sorting: keep local and TRAMP listings deterministic.
 (require 'ls-lisp)
-(setq ls-lisp-dirs-first t)
+(setq ls-lisp-use-insert-directory-program nil
+      ls-lisp-dirs-first t
+      ls-lisp-use-string-collate nil)
 
 ;; Dirvish: modern dired UI - loaded early for `emacs -nw .` support
 (use-package dirvish

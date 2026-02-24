@@ -88,7 +88,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | `C-c n` | New tab |
 | `C-c x` | Close tab |
 | `C-c B` | Project compile |
-| `C-c h` | SSH remote dired |
+| `C-c h` | SSHX remote dired (default) |
 
 ### Git hunk navigation
 

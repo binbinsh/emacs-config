@@ -258,14 +258,16 @@
 ;; ============================================================================
 
 (my/load-feature "dired"
+  (defconst my/dired-listing-switches "-la --group-directories-first"
+    "Dired listing switches with directories grouped before files.")
   ;; Dired usability
   (setq dired-dwim-target t
         dired-recursive-deletes 'always
         dired-recursive-copies 'always
-        dired-listing-switches "-la"
+        dired-listing-switches my/dired-listing-switches
         global-auto-revert-non-file-buffers t)
-  (defconst my/dired-remote-listing-switches "-la"
-    "ls switch set compatible with most ls variants for TRAMP previews.")
+  (defconst my/dired-remote-listing-switches my/dired-listing-switches
+    "Remote Dired listing switches for TRAMP buffers.")
   (defun my/dired-setup-remote-listing-compat ()
     "Use ls-compatible options on remote hosts."
     (when (file-remote-p default-directory)
@@ -533,15 +535,18 @@
                           host)))
                     (tramp-parse-sconfig config))))))
 
-(defun my/remote-dired (host &optional path)
-  "Open dired on remote HOST at PATH (defaults to home)."
-  (interactive
-   (list (completing-read "SSH Host: " (my/ssh-hosts) nil nil)))
-  ;; Use sshx method - doesn't run login shell, avoids prompt matching issues
-  (let ((dir (format "/sshx:%s:%s" host (or path "~/"))))
+(defun my/remote-dired--open (method host &optional path)
+  "Open remote HOST via TRAMP METHOD at PATH (defaults to home)."
+  (let ((dir (format "/%s:%s:%s" method host (or path "~/"))))
     (if (fboundp 'dirvish)
         (dirvish dir)
       (dired dir))))
+
+(defun my/remote-dired (host &optional path)
+  "Open remote HOST with TRAMP sshx."
+  (interactive
+   (list (completing-read "SSH Host: " (my/ssh-hosts) nil nil)))
+  (my/remote-dired--open "sshx" host path))
 
 (global-set-key (kbd "C-c h") #'my/remote-dired)
 
