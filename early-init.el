@@ -11,9 +11,17 @@
 ;; 0. TERMINAL COMPATIBILITY
 ;; ============================================================================
 
-;; Fix kitty/ghostty terminal cursor position issues
-(when (member (getenv "TERM") '("xterm-kitty" "xterm-ghostty"))
-  (setenv "TERM" "xterm-256color"))
+;; Keep truecolor-capable terminal types (like xterm-kitty) when terminfo exists.
+;; Fall back only when current TERM entry is missing on this host.
+(defun my/terminfo-exists-p (term)
+  "Return non-nil when TERM exists in local terminfo database."
+  (and (executable-find "infocmp")
+       (eq 0 (call-process "infocmp" nil nil nil term))))
+
+(let ((term (getenv "TERM")))
+  (when (and (member term '("xterm-kitty"))
+             (not (my/terminfo-exists-p term)))
+    (setenv "TERM" "xterm-256color")))
 
 ;; ============================================================================
 ;; 1. GC AND STARTUP OPTIMIZATION

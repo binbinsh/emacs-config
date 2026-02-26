@@ -1007,7 +1007,7 @@
   (global-set-key (kbd "s-d") #'mc/mark-next-like-this)
   (global-set-key (kbd "C-x d") #'dirvish-dwim)
 
-  ;; Terminal super key bindings via CSI u sequences (for Ghostty SSH)
+  ;; Terminal super key bindings via CSI u sequences over SSH
   (unless (display-graphic-p)
     (define-key input-decode-map "\e[70;5u" (kbd "s-F"))
     (define-key input-decode-map "\e[80;5u" (kbd "s-P"))
