@@ -414,7 +414,7 @@
     '("pdf" "epub"
       "wav" "mp3" "flac" "ogg" "aac" "m4a" "wma"
       "mp4" "mkv" "avi" "mov" "wmv" "webm" "flv"
-      "zip" "7z" "rar" "tar" "gz" "bz2" "xz" "zst"
+      "7z" "rar"
       "docx" "doc" "xlsx" "xls" "pptx" "ppt")
     "Extensions opened externally when `my/external-open-policy' is `ext-only'.")
 
