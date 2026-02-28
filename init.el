@@ -40,8 +40,8 @@
 (setq user-full-name "Binbin Shen")
 (setq user-mail-address "bbs2021@sjtu.edu.cn")
 
-;; Magit repository roots
-(setq magit-repository-directories
+;; Git repository roots used by magit repository picker
+(setq my/git-repository-directories
       (list (cons (expand-file-name "~/Projects/") 2)))
 
 ;; Shell for terminal
@@ -323,6 +323,9 @@
 ;; Smooth scrolling
 (pixel-scroll-precision-mode 1)
 (setq scroll-margin 8 scroll-conservatively 101 auto-window-vscroll nil)
+;; Disable visual soft wrap by default in all file buffers.
+(setq-default truncate-lines t
+              word-wrap nil)
 
 ;; Visual feedback
 (global-hl-line-mode 1)
@@ -535,14 +538,19 @@
          ("/" . dirvish-narrow)))
 
 ;; ============================================================================
-;; 7. VTERM TOGGLE (immediate availability)
+;; 7. TERMINAL TOGGLE (immediate availability)
 ;; ============================================================================
 
-(defun my/toggle-vterm ()
-  "Toggle a bottom vterm panel (30% height)."
+(defvar eat-buffer-name nil
+  "Eat terminal buffer name (declared for dynamic binding).")
+
+(defvar my/terminal-buffer-name "*terminal*"
+  "Dedicated terminal buffer name used by `my/toggle-terminal'.")
+
+(defun my/toggle-terminal ()
+  "Toggle a bottom terminal panel powered by `eat`."
   (interactive)
-  (let* ((name "*vterm*")
-         (buf (get-buffer name))
+  (let* ((buf (get-buffer my/terminal-buffer-name))
          (win (and buf (get-buffer-window buf))))
     (if (and buf (window-live-p win))
         (delete-window win)
@@ -551,10 +559,13 @@
         (select-window new-win)
         (if (buffer-live-p buf)
             (switch-to-buffer buf)
-          (vterm))))))
+          (unless (require 'eat nil t)
+            (user-error "`eat` is not available yet"))
+          (let ((eat-buffer-name my/terminal-buffer-name))
+            (eat)))))))
 
-(global-set-key (kbd "C-c v") #'my/toggle-vterm)
-(global-set-key (kbd "s-`") #'my/toggle-vterm)
+(global-set-key (kbd "C-c v") #'my/toggle-terminal)
+(global-set-key (kbd "s-`") #'my/toggle-terminal)
 
 ;; ============================================================================
 ;; 8. ASYNC LOADING TRIGGER

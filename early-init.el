@@ -117,7 +117,7 @@
 (push '(height . 75) default-frame-alist)
 
 ;; Disable vc-mode checking on file open (major source of slowness)
-;; We use magit/diff-hl instead
+;; Git status is handled by magit/diff-hl workflow.
 (setq vc-handled-backends nil)
 
 ;; ============================================================================

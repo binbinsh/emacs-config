@@ -2,4 +2,4 @@
 elpa/
 tree-sitter/
 custom.el
-
+*.elc
