@@ -1,183 +1,187 @@
 # Emacs Config (macOS + Debian)
 
-A modern, fast Emacs configuration with async loading, LSP support, and a yazi-like Dired/Dirvish workflow.
-
 ![Screenshot](https://raw.githubusercontent.com/binbinsh/emacs-config/main/screenshot.png)
 
-## Quick Install
+## Introduction
+
+This is a lightweight Emacs setup focused on speed and daily workflow quality.
+
+- Fast startup via staged async loading
+- File/project workflows with Treemacs and yazi-like Dired/Dirvish
+- Fast editing with LSP, rich completion, and preview tooling
+
+## Install
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/main/bootstrap.sh)"
 ```
 
-`bootstrap.sh` also:
-- pre-installs Emacs packages by parsing all `use-package` declarations from `init.el` and `post-init.el`
-- byte-compiles all installed ELPA packages, then byte-compiles `early-init.el`, `init.el`, and `post-init.el`
+`bootstrap.sh` pre-installs packages, configures tooling, and prepares cache-related resources.
 
-## Features
+## Function: Performance and UI
 
-| Area | Highlights |
-|------|------------|
-| **Performance** | Async loading via `post-init.el`, native compilation, `gcmh` for smooth GC, fast startup |
-| **UI/UX** | Monokai Pro Octagon theme, JetBrainsMono Nerd Font, tabs, smooth scrolling, line numbers, 120-column guide, posframe UIs |
-| **Modeline** | `doom-modeline` + `keycast` always-on feedback |
-| **Completion** | Vertico + Orderless + Marginalia + Consult + Embark + Corfu + Cape + kind-icon |
-| **Explorer** | Treemacs sidebar + Dired/Dirvish panel with yazi-style workflow (preview, queue, tags, bookmarks, sessions) |
-| **Preview Ecosystem** | Image/video/pdf thumbnails, archive listing preview, media metadata preview, content-hash cache, external opener policy |
-| **Remote** | TRAMP `sshx` workflow with remote preview (temp local copy strategy for thumbnails/metadata/openers) |
-| **Terminal** | Integrated `eat` terminal panel |
-| **Git** | Magit integration with repository picker and transient git command panel, plus diff-hl + blamer |
-| **Languages** | Tree-sitter grammars (pinned), LSP hooks for Python, JS/TS, Go, Rust, Bash, Dart, JSON, Web |
-| **Python** | Pyright LSP, Ruff, format + organize imports on save, pytest via `uv run`, debugpy/dap-mode |
-| **LaTeX** | AUCTeX with SyncTeX, doc-view PDF preview |
-| **jsonl** | JSONL line pretty preview |
+- Startup is optimized with staged module loading from `post-init.el`
+- GC tuning and native compilation support
+- Optional UX polish: doom-modeline, keycast, smooth scrolling, line numbers, column guide
+
+## Function: File and Project Management (Treemacs, Dired, Dirvish)
+
+- Treemacs for project sidebar navigation
+- yazi-inspired Dired/Dirvish workflow with preview, bookmarks, tags, queues, and sessions
+
+| Key | Action |
+|-----|--------|
+| `C-c e` | Focus/open Treemacs |
+| `C-c ;` | Open unified file-manager panel |
+| `C-c ,` | Dirvish dispatch |
+| `C-c a` | Dirvish quick access |
+| `C-c f` | Dirvish fd search |
+| `C-c t` | Toggle Dirvish subtree |
+| `C-c E` | Dirvish emerge menu |
+| `C-c i` | Show metadata preview |
+| `C-c T` | Generate thumbnail preview |
+| `C-c q` | Open operation queue |
+| `C-c k` | Add bookmark |
+| `C-c K` | Jump bookmark |
+| `C-c A` | Add tag |
+| `C-c R` | Remove tag |
+| `C-c z` | Open files by tag |
+| `C-c S` | Restore session |
+| `C-c H` | Toggle hidden files |
+| `C-c r` | Cycle sort order |
+| `C-c y` | Yank files |
+| `C-c X` | Cut files |
+| `C-c P` | Paste files |
+| `C-c O` | Cycle external opener policy |
+| `C-c W` | Bulk rename (wdired) |
+| `C-c Y` | Copy current path |
+| `C-c m` | Open yazi-style session |
+| `V` | Toggle quick preview |
+| `!` | Open files via external app |
+| `C-x d` | Dirvish DWIM |
+| `)` | Toggle dired-git-info |
+| `RET` | Open current item |
+| `C` | Clear preview cache/hash index |
+| `c` | Prune panel preview cache entries |
+| `l` | Toggle live preview in panel |
+
+## Function: Search and Navigation
+
+| Key | Action |
+|-----|--------|
+| `C-c /` | project-wide ripgrep |
+| `C-c ?` | ast-grep search |
+| `C-c b` | switch buffers |
+| `C-c o` | open file |
+| `C-c j` | symbol/imenu jump |
+| `C-c d` | go to definition |
+| `C-c !` | open diagnostics |
+| `s-F` | project search (dwim) |
+| `s-P` | command palette (`M-x`) |
+| `s-p` | find file in project |
+| `C-c B` | run project compile |
+| `C-c w` | toggle global soft wrap |
+
+## Function: Git Workflow
+
+| Key | Action |
+|-----|--------|
+| `C-c g` | Open Magit dashboard |
+| `s-G` | Open Magit dashboard |
+| `C-x g` | Open Magit dashboard |
+| `C-c G` | Open git action panel |
+| `C-c [h` | Previous git hunk |
+| `C-c ]h` | Next git hunk |
+| `C-c =` | Show current hunk diff |
+
+## Function: Terminal
+
+| Key | Action |
+|-----|--------|
+| `C-c v` | Toggle `eat` terminal panel |
+| `s-\`` | Toggle `eat` terminal panel |
+
+## Function: Remote (TRAMP / SSHX)
+
+| Key | Action |
+|-----|--------|
+| `C-c h` | Open remote directory via `sshx` |
+
+## Function: Editing and Language Features
+
+- LSP, consult, embark, corfu/cape, treesit are wired for language work
+- Helpful / which-key / docs and navigation helpers integrated
+
+| Key | Scope | Action |
+|-----|-------|--------|
+| `C-c r` | `lsp-mode` | Find references |
+| `C-c .` | `lsp-mode` | Execute code action |
+| `C-c f` | `lsp-mode` | Format buffer |
+| `C-c i` | `lsp-mode` | Organize imports |
+| `C-c t` | `python-mode` | Run pytest via uv |
+| `C-c >` | global | Mark next-like-this |
+| `s-d` | global | Mark next-like-this |
+
+## Function: Markdown, LaTeX and Document Preview
+
+- Markdown preview using pandoc
+- LaTeX workflow with AUCTeX (2-column TeX/PDF workflow)
+- JSONL live preview mode
+
+| Key | Action |
+|-----|--------|
+| `C-c p` | Markdown preview |
+| `C-c l` | Open TeX + PDF split preview |
+
+## Function: General Helpers and Window/Tab Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `C-h F` | Helpful function docs |
+| `C-h C` | Helpful command docs |
+| `s-c` | Copy |
+| `s-x` | Cut |
+| `s-v` | Paste |
+| `C-c [` | Previous tab |
+| `C-c ]` | Next tab |
+| `C-c n` | New tab |
+| `C-c x` | Close tab |
+| `C-c u` | Undo timeline (vundo) |
 
 ## Structure
 
 ```text
 ~/.emacs.d/
-├── early-init.el           # Pre-GUI: GC tuning, UI chrome, package archives (China mirrors)
-├── init.el                 # Minimal sync setup, theme, fonts, async trigger
-├── post-init.el            # All features load async via idle timer
-├── bootstrap.sh            # One-command installer (deps, fonts, grammars, LSP)
-├── tree-sitter/            # Pre-compiled grammar libraries (pinned versions)
-└── .venv/                  # Python virtual environment (created by bootstrap.sh)
+├── early-init.el           # pre-GUI init: cache, UI chrome, package archives
+├── init.el                 # minimal sync init + async trigger
+├── post-init.el            # async feature loading
+├── bootstrap.sh            # one-command setup helper
+├── tree-sitter/            # precompiled tree-sitter grammars
+└── .venv/                  # local Python env created by bootstrap
 ```
-
-## What bootstrap.sh Installs
-
-**macOS (via Homebrew):**
-- emacs-app (Homebrew cask, installed to /Applications)
-- git stack: `git`
-- search/dev tools: `ripgrep`, `fd`, `cmake`, `pkg-config`, `libtool`
-- preview stack: `ffmpeg`, `ffmpegthumbnailer`, `poppler`, `p7zip`, `mediainfo`, `exiftool`
-- language/tooling: `node` + `npm`, `pandoc`, `ast-grep` (or npm fallback)
-- JetBrainsMono Nerd Font, Symbols Nerd Font Mono
-
-**Debian (via apt):**
-- emacs, git, ripgrep, fd-find, cmake, build-essential
-- preview stack: `ffmpeg`, `ffmpegthumbnailer`, `poppler-utils`, `p7zip-full`, `mediainfo`, `libimage-exiftool-perl`
-- language/tooling: `nodejs`, `npm`, `pandoc`, `xdg-utils`, `file`
-- Noto fonts (CJK, emoji)
-- JetBrainsMono Nerd Font, Symbols Nerd Font (downloaded)
-
-**Cross-platform:**
-- uv (Python package manager)
-- bash-language-server (via npm)
-- ast-grep CLI (package manager or npm fallback `@ast-grep/cli`)
-- tree-sitter grammars (compiled with pinned versions)
-- Python tooling: ruff, ruff-lsp, pyright, debugpy, pytest, black
-- Emacs package pre-install from nested `use-package` declarations + full package/config byte-compile during bootstrap
-
-## Keybindings
-
-### Global shortcuts
-
-| Key | Action |
-|-----|--------|
-| `C-c e` | Focus/open Treemacs sidebar |
-| `C-c /` | Ripgrep search |
-| `C-c ?` | AST search (ast-grep) |
-| `C-c b` | Switch buffers |
-| `C-c o` | Open file |
-| `C-c j` | Symbols (imenu) |
-| `C-c d` | Go to definition |
-| `C-c l` | Maximize frame, pick TeX dir + master `.tex`, open TeX/PDF 2-column layout |
-| `C-c !` | List diagnostics |
-| `C-c v` | Toggle `eat` terminal panel |
-| `C-c g` | Magit dashboard (current repo / picker) |
-| `C-c G` | Git command panel (Magit actions) |
-| `C-x g` | Magit dashboard |
-| `C-c u` | Undo tree (vundo) |
-| `C-c [` | Previous tab |
-| `C-c ]` | Next tab |
-| `C-c n` | New tab |
-| `C-c x` | Close tab |
-| `C-c h` | SSHX remote dired |
-
-### Dired/Dirvish workflow keys
-
-| Key | Action |
-|-----|--------|
-| `C-c ;` | Unified file manager panel (preview/workflow/state) |
-| `C-c ,` | Dirvish dispatch |
-| `C-c i` | Metadata preview |
-| `C-c T` | Thumbnail preview |
-| `C-c q` | Realtime operation queue + progress bars |
-| `C-c S` | Restore saved session |
-| `C-c k` | Bookmark add |
-| `C-c K` | Bookmark jump |
-| `C-c A` | Add tag |
-| `C-c R` | Remove tag |
-| `C-c z` | Open tagged files |
-| `C-c H` | Toggle hidden files |
-| `C-c r` | Cycle sort (name/time/size) |
-| `C-c y` | Yank files |
-| `C-c X` | Cut files |
-| `C-c P` | Paste files (conflict prompt) |
-| `C-c O` | Cycle external opener policy (`ext-only`/`always`/`never`) |
-| `C-c W` | Bulk rename (wdired) |
-| `!` | Open selected files externally (policy-aware, TRAMP-safe) |
-
-`C-c ;` opens the unified command panel; inside panel:
-- `l` toggle live preview
-- `c` prune preview cache (TTL + max entries)
-- `C` clear preview cache and hash index
-
-### Mode-specific
-
-| Mode | Key | Action |
-|------|-----|--------|
-| Markdown (`.md`) | `C-c p` | Preview Markdown (`markdown-preview`) |
-
-### Git hunk navigation
-
-| Key | Action |
-|-----|--------|
-| `C-c [h` | Previous hunk |
-| `C-c ]h` | Next hunk |
-| `C-c =` | Show hunk diff |
-
-### macOS shortcuts (Cmd key)
-
-| Key | Action |
-|-----|--------|
-| `s-F` | Project-wide search (ripgrep) |
-| `s-P` | Command palette (M-x) |
-| `s-p` | Project find file |
-| `s-b` | Toggle explorer |
-| `s-\`` | Toggle terminal |
-| `s-E` | Focus explorer |
-| `s-G` | Magit dashboard |
-| `s-d` | Mark next like this (multiple cursors) |
 
 ## Dependencies
 
 ### Required
 - Emacs 30+
 - `git`, `ripgrep`
-- `fd` (or `fd-find`; bootstrap will link `fd` -> `fdfind` on Debian when needed)
-- `magit` Emacs package (installed by bootstrap package pre-install)
-- `eat` Emacs package
+- `fd` or `fd-find`
 - `ast-grep` CLI (`ast-grep` or `sg`)
-- Linux external opener: `xdg-open` or `gio`
+- `magit`, `eat` (via package install)
+- `xdg-open` or `gio` (Linux for external opening)
 
 ### Optional but recommended
-- `ffmpegthumbnailer`, `ffmpeg` (video thumbnails)
-- `poppler-utils` / `poppler` (`pdftoppm` for PDF thumbnail preview)
-- `mediainfo`, `exiftool` (rich metadata preview)
-- `p7zip` / `p7zip-full` (archive preview)
-- Node.js + npm (bash-language-server)
-- `pandoc` (markdown preview)
+- `ffmpegthumbnailer`, `ffmpeg`
+- `poppler-utils` / `poppler`
+- `mediainfo`, `exiftool`
+- `p7zip` / `p7zip-full`
+- `nodejs`, `npm`
+- `pandoc`
 
-## Cache Location
+## Cache Paths
 
-All temporary files go to `~/.cache/emacs/` (XDG compliant):
+Temporary and generated files are under `~/.cache/emacs/`:
+
 - auto-save, backups, eln-cache, lsp, tramp, treemacs, svg-lib, transient, etc.
-- Dired preview cache: `~/.cache/emacs/dirvish/preview-cache/`
-- Dired preview hash index/session/tags: `~/.cache/emacs/dirvish/preview-hash-index.el`, `session.el`, `tags.el`
-
-## Package Archives
-
-Uses China mirrors (TUNA) for faster package downloads:
-- GNU ELPA, NonGNU ELPA, MELPA
+- Dired/Dirvish preview cache: `~/.cache/emacs/dirvish/preview-cache/`
+- Dirvish metadata: `~/.cache/emacs/dirvish/preview-hash-index.el`, `session.el`, `tags.el`
