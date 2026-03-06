@@ -262,21 +262,30 @@
 ;; ============================================================================
 
 (my/load-feature "dired"
-  (defconst my/dired-listing-switches "-la --group-directories-first"
-    "Dired listing switches with directories grouped before files.")
+  (defun my/dired--listing-switches (sort)
+    "Return portable Dired switches for SORT.
+Local directory-first ordering comes from `ls-lisp-dirs-first'."
+    (pcase sort
+      ('name "-la")
+      ('mtime "-lat")
+      ('size "-laS")
+      (_ (error "Unsupported Dired sort state: %S" sort))))
+  (defconst my/dired-listing-switches (my/dired--listing-switches 'name)
+    "Portable Dired listing switches for local buffers.")
   ;; Dired usability
   (setq dired-dwim-target t
         dired-recursive-deletes 'always
         dired-recursive-copies 'always
         dired-listing-switches my/dired-listing-switches
+        dired-use-ls-dired nil
         global-auto-revert-non-file-buffers t)
   ;; `dired-omit-files' is defined in dired-x, so set it only after load.
   (with-eval-after-load 'dired-x
     (setq dired-omit-files (concat dired-omit-files "\\|^\\.[^.].*")))
   (defconst my/dired-remote-listing-switches my/dired-listing-switches
-    "Remote Dired listing switches for TRAMP buffers.")
+    "Portable Dired listing switches for TRAMP buffers.")
   (defun my/dired-setup-remote-listing-compat ()
-    "Use ls-compatible options on remote hosts."
+    "Use portable `ls' options on remote hosts."
     (when (file-remote-p default-directory)
       (setq-local dired-use-ls-dired nil)
       (setq-local dired-listing-switches my/dired-remote-listing-switches)))
@@ -892,9 +901,9 @@
               file size mtime body (if remote-p "remote+cache" "local+cache"))))))))
 
   (defconst my/dired-sort-cycle
-    '((name . "-la --group-directories-first")
-      (mtime . "-lat --group-directories-first")
-      (size . "-laS --group-directories-first"))
+    `((name . ,(my/dired--listing-switches 'name))
+      (mtime . ,(my/dired--listing-switches 'mtime))
+      (size . ,(my/dired--listing-switches 'size)))
     "Sort presets for `my/dired-cycle-sort'.")
 
   (defvar-local my/dired-sort-cycle-state 'name
