@@ -147,7 +147,7 @@
 ;; 4. ESSENTIAL UI (SYNCHRONOUS)
 ;; ============================================================================
 
-(setq inhibit-startup-screen nil)
+(setq inhibit-startup-screen t)
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq frame-resize-pixelwise t)
 (setq column-number-mode t)
@@ -167,8 +167,18 @@
 (defvar my/startup-profile--refresh-timer nil
   "Timer used to coalesce startup profile redraws.")
 
+(defvar my/startup-screen-delay 0.35
+  "Seconds to wait before showing the welcome buffer on an empty launch.")
+
+(defvar my/startup-content-requested-p nil
+  "Non-nil means startup should not show the welcome buffer.")
+
+(defvar my/startup-screen-timer nil
+  "Timer used to delay welcome buffer display until startup settles.")
+
 (defun my/display-startup-screen (&optional concise)
-  "Display a minimal startup screen with profiling only."
+  "Display a minimal welcome buffer with startup profiling."
+  (interactive)
   (let ((splash-buffer (get-buffer-create my/startup-profile-buffer-name)))
     (with-current-buffer splash-buffer
       (let ((inhibit-read-only t))
@@ -187,7 +197,49 @@
       (switch-to-buffer splash-buffer)))
   (my/startup-profile-refresh))
 
-(advice-add 'display-startup-screen :override #'my/display-startup-screen)
+(defun my/startup-initial-buffer-p (&optional buffer)
+  "Return non-nil when BUFFER still reflects an untouched empty launch."
+  (let ((buffer (or buffer (window-buffer (selected-window)))))
+    (cond
+     ((null buffer) nil)
+     ((eq buffer (get-scratch-buffer-create))
+      (not (buffer-modified-p buffer)))
+     ((eq buffer (messages-buffer)) t)
+     (t nil))))
+
+(defun my/mark-startup-content-requested (&rest _)
+  "Record that startup already has user-requested content to display."
+  (setq my/startup-content-requested-p t)
+  (when (timerp my/startup-screen-timer)
+    (cancel-timer my/startup-screen-timer)
+    (setq my/startup-screen-timer nil)))
+
+(defun my/startup-ns-open-file-p ()
+  "Return non-nil when macOS has already queued an open-file event."
+  (and (eq system-type 'darwin)
+       (boundp 'ns-input-file)
+       ns-input-file))
+
+(defun my/show-startup-screen-if-appropriate ()
+  "Display the welcome buffer only for an untouched empty launch."
+  (setq my/startup-screen-timer nil)
+  (when (and (not my/startup-content-requested-p)
+             (not (my/startup-ns-open-file-p))
+             (my/startup-initial-buffer-p))
+    (my/display-startup-screen)))
+
+(add-hook 'find-file-hook #'my/mark-startup-content-requested)
+(add-hook 'dired-mode-hook #'my/mark-startup-content-requested)
+
+(with-eval-after-load 'server
+  (add-hook 'server-visit-hook #'my/mark-startup-content-requested))
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (unless my/startup-content-requested-p
+              (setq my/startup-screen-timer
+                    (run-with-timer my/startup-screen-delay nil
+                                    #'my/show-startup-screen-if-appropriate)))))
 
 (defun my/startup-profile-register-module (name scheduled-delay)
   "Register startup module NAME with SCHEDULED-DELAY in seconds."
@@ -448,9 +500,30 @@
 ;; Font setup
 (require 'cl-lib)
 
+(defconst my/gui-default-font-size 15
+  "Preferred default font size for GUI frames.")
+
+(defconst my/system-default-english-font-candidates
+  (cond
+   ((memq system-type '(darwin gnu/linux))
+    '("JetBrainsMono NFM"))
+   (t '("Monospace")))
+  "Preferred English monospace font families for GUI frames.")
+
+(defconst my/system-default-cjk-font-candidates
+  (cond
+   ((eq system-type 'darwin) '("PingFang SC" "Hiragino Sans GB" "Noto Sans CJK SC"))
+   (t '("Noto Sans CJK SC")))
+  "Preferred CJK font families for GUI frames.")
+
+(defun my/font-available-p (font)
+  "Return non-nil when FONT can be resolved by the current Emacs font backend."
+  (or (find-font (font-spec :name font))
+      (find-font (font-spec :family font))))
+
 (defun my/find-first-font (fonts)
   "Return first available font from FONTS list."
-  (cl-find-if (lambda (f) (find-font (font-spec :name f))) fonts))
+  (cl-find-if #'my/font-available-p fonts))
 
 (defvar my/bundled-jetbrains-mono-nerd-font-ensured nil
   "Non-nil once bundled JetBrains Mono Nerd Font installation has been attempted this session.")
@@ -473,29 +546,43 @@
         (when (fboundp 'clear-font-cache)
           (clear-font-cache))))))
 
+(defun my/set-default-frame-font (font-family)
+  "Use FONT-FAMILY for newly created GUI frames."
+  (setf (alist-get 'font default-frame-alist nil nil #'eq)
+        (format "%s-%d" font-family my/gui-default-font-size)))
+
+(defun my/describe-gui-font ()
+  "Report the current default GUI font selection."
+  (interactive)
+  (message "default-family=%s default-font=%s frame-font=%s"
+           (face-attribute 'default :family nil t)
+           (face-attribute 'default :font nil t)
+           (frame-parameter nil 'font)))
+
 (defun my/apply-fonts (&optional frame)
   "Apply preferred fonts to FRAME."
-  (with-selected-frame (or frame (selected-frame))
-    (when (display-graphic-p)
-      (my/ensure-bundled-jetbrains-mono-nerd-font)
-      (let* ((system-default-english-candidates
-              (cond
-               ((eq system-type 'darwin) '("JetBrainsMono NFM"))
-               ((eq system-type 'gnu/linux) '("JetBrainsMono NFM"))
-               (t '("Monospace"))))
-             (english (or (my/find-first-font system-default-english-candidates) "Monospace"))
-             (cjk (or (my/find-first-font '("PingFang SC" "Noto Sans CJK SC")) "Noto Sans CJK SC"))
-             (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))))
-        (set-face-attribute 'default nil :font (font-spec :family english :size 15))
-        (dolist (charset '(han kana cjk-misc bopomofo))
-          (set-fontset-font t charset (font-spec :name cjk)))
-        (when emoji (set-fontset-font t 'emoji (font-spec :name emoji) nil 'prepend))
-        ;; Powerline symbols (U+E0A0-U+E0D4) - use Nerd Font
-        (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family english))
-        ;; Private Use Area for nerd-icons
-        (set-fontset-font t '(#xf000 . #xf8ff) (font-spec :family english))
-        (setq nerd-icons-font-family "Symbols Nerd Font Mono")))))
+  (let ((target-frame (or frame (selected-frame))))
+    (with-selected-frame target-frame
+      (when (display-graphic-p)
+        (my/ensure-bundled-jetbrains-mono-nerd-font)
+        (let* ((english (or (my/find-first-font my/system-default-english-font-candidates) "Monospace"))
+               (cjk (or (my/find-first-font my/system-default-cjk-font-candidates) "Noto Sans CJK SC"))
+               (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))))
+          (my/set-default-frame-font english)
+          (set-face-attribute 'default target-frame
+                              :family english
+                              :height (* my/gui-default-font-size 10))
+          (dolist (charset '(han kana cjk-misc bopomofo))
+            (set-fontset-font t charset (font-spec :name cjk)))
+          (when emoji (set-fontset-font t 'emoji (font-spec :name emoji) nil 'prepend))
+          ;; Powerline symbols (U+E0A0-U+E0D4) - use Nerd Font
+          (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family english))
+          ;; Private Use Area for nerd-icons
+          (set-fontset-font t '(#xf000 . #xf8ff) (font-spec :family english))
+          (setq nerd-icons-font-family "Symbols Nerd Font Mono"))))))
 
+(when (display-graphic-p)
+  (my/apply-fonts))
 (add-hook 'emacs-startup-hook #'my/apply-fonts)
 (add-hook 'after-make-frame-functions #'my/apply-fonts)
 
