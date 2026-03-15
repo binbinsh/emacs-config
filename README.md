@@ -35,7 +35,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | `C-c ;` | Open unified file-manager panel |
 | `C-c ,` | Dirvish dispatch |
 | `C-c a` | Dirvish quick access |
-| `C-c f` | Dirvish fd search in current Dired/Dirvish directory |
+| `C-c f` | Dirvish fd search in current Dired/Dirvish directory, including VCS-ignored paths |
 | `C-c t` | Toggle Dirvish subtree |
 | `C-c E` | Dirvish emerge menu |
 | `C-c i` | Show metadata preview |

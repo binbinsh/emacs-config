@@ -617,6 +617,8 @@
   (dirvish-hide-details t)
   (dirvish-hide-cursor t)
   (dirvish-window-fringe 8)
+  ;; Include paths ignored by .gitignore in `dirvish-fd' results.
+  (dirvish-fd-switches "--no-ignore-vcs")
   ;; 预览功能
   (dirvish-preview-dispatchers '(image gif video audio epub archive pdf))
   (dirvish-default-layout '(0 0.4 0.6))  ;; 左40%文件列表，右60%预览
