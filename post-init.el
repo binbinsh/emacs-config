@@ -1401,7 +1401,6 @@ With FORCE, refresh even when BUFFER is not visible."
       (define-key map (kbd "C-c ;") #'my/file-manager-panel)
       (define-key map (kbd "C-c ,") #'dirvish-dispatch)
       (define-key map (kbd "C-c a") #'dirvish-quick-access)
-      (define-key map (kbd "C-c f") #'dirvish-fd)
       (define-key map (kbd "C-c t") #'dirvish-subtree-toggle)
       (define-key map (kbd "C-c E") #'dirvish-emerge-menu)
       (define-key map (kbd "C-c i") #'my/dired-show-metadata)
@@ -2202,7 +2201,6 @@ Each element is either DIR or (DIR . DEPTH)."
   (global-set-key (kbd "s-G") #'my/git-dashboard)
   (global-set-key (kbd "C-c g") #'my/git-dashboard)
   (global-set-key (kbd "s-d") #'mc/mark-next-like-this)
-  (global-set-key (kbd "C-x d") #'dirvish-dwim)
 
   ;; Terminal super key bindings via CSI u sequences over SSH
   (unless (display-graphic-p)

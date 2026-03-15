@@ -614,6 +614,11 @@
   (dirvish-default-layout '(0 0.4 0.6))  ;; 左40%文件列表，右60%预览
   :config
   (dirvish-override-dired-mode)
+  ;; These two entry points should be available immediately after startup,
+  ;; instead of waiting for async post-init keybinding setup.
+  (global-set-key (kbd "C-x d") #'dirvish-dwim)
+  (with-eval-after-load 'dired
+    (define-key dired-mode-map (kbd "C-c f") #'dirvish-fd))
   (with-eval-after-load 'dirvish-subtree
     (setq dirvish-subtree-state-style 'nerd
           dirvish-subtree-always-show-state t))

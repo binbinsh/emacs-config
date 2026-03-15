@@ -35,7 +35,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | `C-c ;` | Open unified file-manager panel |
 | `C-c ,` | Dirvish dispatch |
 | `C-c a` | Dirvish quick access |
-| `C-c f` | Dirvish fd search |
+| `C-c f` | Dirvish fd search in current Dired/Dirvish directory |
 | `C-c t` | Toggle Dirvish subtree |
 | `C-c E` | Dirvish emerge menu |
 | `C-c i` | Show metadata preview |
@@ -58,7 +58,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 | `C-c m` | Open yazi-style session |
 | `V` | Toggle quick preview |
 | `!` | Open files via external app |
-| `C-x d` | Dirvish DWIM |
+| `C-x d` | Dirvish DWIM (available immediately at startup) |
 | `)` | Toggle dired-git-info |
 | `RET` | Open current item |
 | `C` | Clear preview cache/hash index |
