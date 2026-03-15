@@ -2035,6 +2035,12 @@ Each element is either DIR or (DIR . DEPTH)."
 
 (my/load-feature "jsonl-preview"
   (defvar jsonl-preview--buffer-name "*JSONL Preview*")
+  (defvar jsonl-preview--jsonl-regexp "\\.jsonl\\(?:\\.gz\\)?\\'")
+
+  (defun jsonl-preview--jsonl-file-p ()
+    "Return non-nil when current buffer is a JSONL file."
+    (string-match-p jsonl-preview--jsonl-regexp
+                    (downcase (or buffer-file-name ""))))
 
   (defun jsonl-preview--ensure-window ()
     "Ensure preview window is visible, side based on frame size."
@@ -2076,7 +2082,7 @@ Each element is either DIR or (DIR . DEPTH)."
   (defun jsonl-preview--update ()
     "Update the preview buffer with pretty JSON of current line."
     (when (and (bound-and-true-p jsonl-preview-mode)
-               (string-suffix-p ".jsonl" (or buffer-file-name "") t))
+               (jsonl-preview--jsonl-file-p))
       (let* ((line (string-trim (or (thing-at-point 'line t) ""))))
         (jsonl-preview--ensure-window)
         (with-current-buffer (get-buffer-create jsonl-preview--buffer-name)
@@ -2116,11 +2122,11 @@ Each element is either DIR or (DIR . DEPTH)."
   ;; Auto-enable for .jsonl files
   (add-hook 'json-ts-mode-hook
             (lambda ()
-              (when (string-suffix-p ".jsonl" (or buffer-file-name "") t)
+              (when (jsonl-preview--jsonl-file-p)
                 (jsonl-preview-mode 1))))
   (add-hook 'find-file-hook
             (lambda ()
-              (when (string-suffix-p ".jsonl" (or buffer-file-name "") t)
+              (when (jsonl-preview--jsonl-file-p)
                 (jsonl-preview-mode 1)))))
 
 ;; ============================================================================
@@ -2309,6 +2315,13 @@ Each element is either DIR or (DIR . DEPTH)."
     (if global-visual-line-mode
         (global-visual-line-mode -1)
       (global-visual-line-mode 1)))
+  (defun my/bind-soft-wrap-local-fallback ()
+    "Ensure `C-c w` stays available when local maps shadow globals."
+    (unless (or (minibufferp)
+                (local-key-binding (kbd "C-c w")))
+      (local-set-key (kbd "C-c w") #'my/toggle-soft-wrap-global)))
+  (add-hook 'after-change-major-mode-hook #'my/bind-soft-wrap-local-fallback)
+  (my/bind-soft-wrap-local-fallback)
   (global-set-key (kbd "C-c w") #'my/toggle-soft-wrap-global))
 
 ;;; post-init.el ends here

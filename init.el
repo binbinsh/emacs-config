@@ -500,20 +500,25 @@
 ;; Font setup
 (require 'cl-lib)
 
-(defconst my/gui-default-font-size 15
+(defconst my/gui-default-font-size 11
   "Preferred default font size for GUI frames.")
 
 (defconst my/system-default-english-font-candidates
   (cond
-   ((memq system-type '(darwin gnu/linux))
-    '("JetBrainsMono NFM"))
+   ((eq system-type 'darwin)
+    '("JetBrainsMono Nerd Font Mono" "JetBrainsMono NFM" "JetBrains Mono"))
+   ((eq system-type 'gnu/linux)
+    '("JetBrainsMono Nerd Font Mono" "JetBrainsMono NFM" "JetBrains Mono" "Monospace"))
    (t '("Monospace")))
   "Preferred English monospace font families for GUI frames.")
 
 (defconst my/system-default-cjk-font-candidates
   (cond
-   ((eq system-type 'darwin) '("PingFang SC" "Hiragino Sans GB" "Noto Sans CJK SC"))
-   (t '("Noto Sans CJK SC")))
+   ((eq system-type 'darwin)
+    '("PingFang SC" "Sarasa Mono SC" "Hiragino Sans GB" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
+   ((eq system-type 'gnu/linux)
+    '("Sarasa Mono SC" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
+   (t '("Monospace")))
   "Preferred CJK font families for GUI frames.")
 
 (defun my/font-available-p (font)
@@ -565,8 +570,11 @@
     (with-selected-frame target-frame
       (when (display-graphic-p)
         (my/ensure-bundled-jetbrains-mono-nerd-font)
-        (let* ((english (or (my/find-first-font my/system-default-english-font-candidates) "Monospace"))
-               (cjk (or (my/find-first-font my/system-default-cjk-font-candidates) "Noto Sans CJK SC"))
+        (let* ((english (or (my/find-first-font my/system-default-english-font-candidates)
+                            "Monospace"))
+               ;; Prefer a monospaced CJK font so Chinese comments/code do not look too wide.
+               (cjk (or (my/find-first-font my/system-default-cjk-font-candidates)
+                        "Monospace"))
                (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))))
           (my/set-default-frame-font english)
           (set-face-attribute 'default target-frame

@@ -11,7 +11,7 @@
 ;; 0. TERMINAL COMPATIBILITY
 ;; ============================================================================
 
-;; Keep truecolor-capable terminal types (like xterm-kitty) when terminfo exists.
+;; Keep truecolor-capable terminal types (like xterm-ghostty) when terminfo exists.
 ;; Fall back only when current TERM entry is missing on this host.
 (defun my/terminfo-exists-p (term)
   "Return non-nil when TERM exists in local terminfo database."
@@ -19,7 +19,7 @@
        (eq 0 (call-process "infocmp" nil nil nil term))))
 
 (let ((term (getenv "TERM")))
-  (when (and (member term '("xterm-kitty"))
+  (when (and (member term '("xterm-ghostty"))
              (not (my/terminfo-exists-p term)))
     (setenv "TERM" "xterm-256color")))
 
@@ -48,6 +48,10 @@
 ;; UTF-8 encoding
 (set-language-environment "UTF-8")
 (prefer-coding-system 'utf-8)
+
+;; Prefer newer Lisp source over stale byte-compiled files.
+;; This keeps iterative config edits from being masked by old .elc files.
+(setq load-prefer-newer t)
 
 ;; Treat East Asian Ambiguous width characters as single-width.
 ;; `set-language-environment' sets `cjk-ambiguous-chars-are-wide' to t,
@@ -130,7 +134,8 @@
             (setq gc-cons-threshold (* 16 1024 1024)
                   gc-cons-percentage 0.1
                   file-name-handler-alist my/file-name-handler-alist-old)
-            (garbage-collect)))
+            ;; Run the first full GC after the initial frame becomes responsive.
+            (run-with-idle-timer 1.0 nil #'garbage-collect)))
 
 ;; Report startup time
 (add-hook 'window-setup-hook
