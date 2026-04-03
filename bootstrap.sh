@@ -72,12 +72,6 @@ install_macos() {
     ffmpeg ffmpegthumbnailer poppler p7zip exiftool mediainfo \
     node pandoc ast-grep
 
-  # Nerd Fonts (JetBrainsMono)
-  brew tap homebrew/cask-fonts >/dev/null 2>&1 || true
-  if ! brew list font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
-    brew install font-jetbrains-mono-nerd-font || warn "Failed to install JetBrainsMono Nerd Font via Homebrew"
-  fi
-
   # Nerd Fonts Symbols Only (provides "Symbols Nerd Font Mono" for icons)
   if ! brew list font-symbols-only-nerd-font >/dev/null 2>&1; then
     brew install font-symbols-only-nerd-font || warn "Failed to install Symbols Nerd Font via Homebrew"
@@ -107,20 +101,6 @@ install_debian() {
     ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
     ensure_path "$HOME/.local/bin"
   fi
-
-  # Nerd Fonts (JetBrainsMono)
-  dest="$HOME/.local/share/fonts/NerdFonts/JetBrainsMono"
-  mkdir -p "$dest"
-  if ! ls "$dest"/*.ttf >/dev/null 2>&1; then
-    tmp_dir="$(mktemp -d)"
-    if curl -fsSL -o "$tmp_dir/JetBrainsMono.zip" "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"; then
-      unzip -o "$tmp_dir/JetBrainsMono.zip" -d "$dest" >/dev/null 2>&1 || warn "Unzip JetBrainsMono Nerd Font failed"
-    else
-      warn "Download JetBrainsMono Nerd Font failed"
-    fi
-    rm -rf "$tmp_dir"
-  fi
-  fc-cache -f >/dev/null 2>&1 || true
 
   # Nerd Fonts Symbols Only (provides "Symbols Nerd Font Mono" for icons)
   dest_sym="$HOME/.local/share/fonts/NerdFonts/SymbolsOnly"

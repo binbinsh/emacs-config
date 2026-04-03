@@ -506,9 +506,9 @@
 (defconst my/system-default-english-font-candidates
   (cond
    ((eq system-type 'darwin)
-    '("JetBrainsMono Nerd Font Mono" "JetBrainsMono NFM" "JetBrains Mono"))
+    '("Sarasa Term SC" "Monospace"))
    ((eq system-type 'gnu/linux)
-    '("JetBrainsMono Nerd Font Mono" "JetBrainsMono NFM" "JetBrains Mono" "Monospace"))
+    '("Sarasa Term SC" "Monospace"))
    (t '("Monospace")))
   "Preferred English monospace font families for GUI frames.")
 
@@ -517,7 +517,7 @@
    ((eq system-type 'darwin)
     '("PingFang SC" "Sarasa Mono SC" "Hiragino Sans GB" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
    ((eq system-type 'gnu/linux)
-    '("Sarasa Mono SC" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
+    '("Sarasa Term SC" "Sarasa Mono SC" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
    (t '("Monospace")))
   "Preferred CJK font families for GUI frames.")
 
@@ -530,26 +530,47 @@
   "Return first available font from FONTS list."
   (cl-find-if #'my/font-available-p fonts))
 
-(defvar my/bundled-jetbrains-mono-nerd-font-ensured nil
-  "Non-nil once bundled JetBrains Mono Nerd Font installation has been attempted this session.")
+(defvar my/bundled-sarasa-term-sc-font-ensured nil
+  "Non-nil once bundled Sarasa Term SC font installation has been attempted this session.")
 
-(defun my/ensure-bundled-jetbrains-mono-nerd-font ()
-  "Install bundled JetBrains Mono Nerd font for current user, preferring repo copy."
-  (unless my/bundled-jetbrains-mono-nerd-font-ensured
-    (setq my/bundled-jetbrains-mono-nerd-font-ensured t)
-    (let* ((source (expand-file-name "assets/JetBrainsMonoNerdFontMono-Regular.ttf" user-emacs-directory))
+(defun my/file-needs-refresh-p (source dest)
+  "Return non-nil when DEST should be refreshed from SOURCE."
+  (let ((source-attrs (and (file-exists-p source)
+                           (file-attributes source 'string)))
+        (dest-attrs (and (file-exists-p dest)
+                         (file-attributes dest 'string))))
+    (and source-attrs
+         (or (null dest-attrs)
+             (/= (file-attribute-size source-attrs)
+                 (file-attribute-size dest-attrs))
+             (time-less-p (file-attribute-modification-time dest-attrs)
+                          (file-attribute-modification-time source-attrs))))))
+
+(defun my/ensure-bundled-sarasa-term-sc-font ()
+  "Install bundled Sarasa Term SC font for current user when needed."
+  (unless my/bundled-sarasa-term-sc-font-ensured
+    (setq my/bundled-sarasa-term-sc-font-ensured t)
+    (let* ((source (expand-file-name "assets/SarasaTermSC-Regular.ttf" user-emacs-directory))
            (dest-dir (cond
                       ((eq system-type 'darwin) (expand-file-name "~/Library/Fonts"))
-                      ((eq system-type 'gnu/linux) (expand-file-name "~/.local/share/fonts"))
+                      ((eq system-type 'gnu/linux) (expand-file-name "~/.local/share/fonts/emacs-bundled"))
                       (t nil)))
-           (dest (and dest-dir (expand-file-name "JetBrainsMonoNerdFontMono-Regular.ttf" dest-dir))))
-      (when (and dest (file-exists-p source))
+           (dest (and dest-dir (expand-file-name "SarasaTermSC-Regular.ttf" dest-dir))))
+      (when (and dest (my/file-needs-refresh-p source dest))
         (make-directory dest-dir t)
         (copy-file source dest t)
         (when (and (eq system-type 'gnu/linux) (executable-find "fc-cache"))
-          (call-process "fc-cache" nil nil nil "-f" dest-dir))
+          ;; Refresh only when the bundled font changed on disk.
+          (call-process "fc-cache" nil nil nil dest-dir))
         (when (fboundp 'clear-font-cache)
-          (clear-font-cache))))))
+          (clear-font-cache))
+        t))))
+
+(defun my/preferred-english-font-family ()
+  "Return preferred English GUI font, installing bundled fallback if needed."
+  (my/ensure-bundled-sarasa-term-sc-font)
+  (or (my/find-first-font my/system-default-english-font-candidates)
+      "Monospace"))
 
 (defun my/set-default-frame-font (font-family)
   "Use FONT-FAMILY for newly created GUI frames."
@@ -569,13 +590,14 @@
   (let ((target-frame (or frame (selected-frame))))
     (with-selected-frame target-frame
       (when (display-graphic-p)
-        (my/ensure-bundled-jetbrains-mono-nerd-font)
-        (let* ((english (or (my/find-first-font my/system-default-english-font-candidates)
-                            "Monospace"))
+        (let* ((english (my/preferred-english-font-family))
                ;; Prefer a monospaced CJK font so Chinese comments/code do not look too wide.
                (cjk (or (my/find-first-font my/system-default-cjk-font-candidates)
                         "Monospace"))
-               (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji"))))
+               (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji")))
+               (symbols (or (my/find-first-font '("Symbols Nerd Font Mono"
+                                                  "Symbols Nerd Font"))
+                            english)))
           (my/set-default-frame-font english)
           (set-face-attribute 'default target-frame
                               :family english
@@ -584,14 +606,13 @@
             (set-fontset-font t charset (font-spec :name cjk)))
           (when emoji (set-fontset-font t 'emoji (font-spec :name emoji) nil 'prepend))
           ;; Powerline symbols (U+E0A0-U+E0D4) - use Nerd Font
-          (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family english))
+          (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family symbols))
           ;; Private Use Area for nerd-icons
-          (set-fontset-font t '(#xf000 . #xf8ff) (font-spec :family english))
+          (set-fontset-font t '(#xf000 . #xf8ff) (font-spec :family symbols))
           (setq nerd-icons-font-family "Symbols Nerd Font Mono"))))))
 
 (when (display-graphic-p)
   (my/apply-fonts))
-(add-hook 'emacs-startup-hook #'my/apply-fonts)
 (add-hook 'after-make-frame-functions #'my/apply-fonts)
 
 ;; ============================================================================
