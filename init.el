@@ -500,8 +500,12 @@
 ;; Font setup
 (require 'cl-lib)
 
-(defconst my/gui-default-font-size 11
-  "Preferred default font size for GUI frames.")
+(defconst my/gui-default-font-size
+  (cond
+   ((eq system-type 'darwin) 14)
+   ((eq system-type 'gnu/linux) 11)
+   (t 11))
+  "Preferred default font size for GUI frames on the current system.")
 
 (defconst my/system-default-english-font-candidates
   (cond
