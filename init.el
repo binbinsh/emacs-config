@@ -537,6 +537,9 @@
 (defvar my/bundled-sarasa-term-sc-font-ensured nil
   "Non-nil once bundled Sarasa Term SC font installation has been attempted this session.")
 
+(defconst my/bundled-sarasa-term-sc-font-pattern "\\`SarasaTermSC-.*\\.ttf\\'"
+  "Filename pattern for bundled Sarasa Term SC font files.")
+
 (defun my/file-needs-refresh-p (source dest)
   "Return non-nil when DEST should be refreshed from SOURCE."
   (let ((source-attrs (and (file-exists-p source)
@@ -551,24 +554,32 @@
                           (file-attribute-modification-time source-attrs))))))
 
 (defun my/ensure-bundled-sarasa-term-sc-font ()
-  "Install bundled Sarasa Term SC font for current user when needed."
+  "Install bundled Sarasa Term SC fonts for current user when needed."
   (unless my/bundled-sarasa-term-sc-font-ensured
     (setq my/bundled-sarasa-term-sc-font-ensured t)
-    (let* ((source (expand-file-name "assets/SarasaTermSC-Regular.ttf" user-emacs-directory))
+    (let* ((source-dir (expand-file-name "assets" user-emacs-directory))
+           (sources (and (file-directory-p source-dir)
+                         (sort (directory-files source-dir t my/bundled-sarasa-term-sc-font-pattern)
+                               #'string<)))
            (dest-dir (cond
                       ((eq system-type 'darwin) (expand-file-name "~/Library/Fonts"))
                       ((eq system-type 'gnu/linux) (expand-file-name "~/.local/share/fonts/emacs-bundled"))
                       (t nil)))
-           (dest (and dest-dir (expand-file-name "SarasaTermSC-Regular.ttf" dest-dir))))
-      (when (and dest (my/file-needs-refresh-p source dest))
+           (updated nil))
+      (when (and dest-dir sources)
         (make-directory dest-dir t)
-        (copy-file source dest t)
-        (when (and (eq system-type 'gnu/linux) (executable-find "fc-cache"))
-          ;; Refresh only when the bundled font changed on disk.
-          (call-process "fc-cache" nil nil nil dest-dir))
-        (when (fboundp 'clear-font-cache)
-          (clear-font-cache))
-        t))))
+        (dolist (source sources)
+          (let ((dest (expand-file-name (file-name-nondirectory source) dest-dir)))
+            (when (my/file-needs-refresh-p source dest)
+              (copy-file source dest t)
+              (setq updated t))))
+        (when updated
+          (when (and (eq system-type 'gnu/linux) (executable-find "fc-cache"))
+            ;; Refresh only when the bundled fonts changed on disk.
+            (call-process "fc-cache" nil nil nil dest-dir))
+          (when (fboundp 'clear-font-cache)
+            (clear-font-cache))
+          t)))))
 
 (defun my/preferred-english-font-family ()
   "Return preferred English GUI font, installing bundled fallback if needed."

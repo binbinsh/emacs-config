@@ -19,6 +19,52 @@ ensure_path() {
   esac
 }
 
+file_needs_refresh() {
+  local source="$1"
+  local dest="$2"
+  [ ! -f "$dest" ] && return 0
+  [ "$source" -nt "$dest" ] && return 0
+  [ "$(wc -c <"$source")" -ne "$(wc -c <"$dest")" ] && return 0
+  return 1
+}
+
+install_bundled_sarasa_term_sc_fonts() {
+  local source_dir="$REPO_DIR/assets"
+  local dest_dir
+  local font
+  local dest
+  local updated=0
+
+  case "$OS" in
+    Darwin) dest_dir="$HOME/Library/Fonts" ;;
+    Linux) dest_dir="$HOME/.local/share/fonts/emacs-bundled" ;;
+    *) return 0 ;;
+  esac
+
+  if ! compgen -G "$source_dir/SarasaTermSC-*.ttf" >/dev/null 2>&1; then
+    warn "Bundled Sarasa Term SC fonts not found in $source_dir"
+    return 0
+  fi
+
+  mkdir -p "$dest_dir"
+  for font in "$source_dir"/SarasaTermSC-*.ttf; do
+    dest="$dest_dir/$(basename "$font")"
+    if file_needs_refresh "$font" "$dest"; then
+      cp "$font" "$dest"
+      updated=1
+    fi
+  done
+
+  if [ "$updated" -eq 1 ]; then
+    if [ "$OS" = Linux ] && have fc-cache; then
+      fc-cache -f "$dest_dir" >/dev/null 2>&1 || true
+    fi
+    log "Bundled Sarasa Term SC fonts synced to $dest_dir"
+  else
+    info "Bundled Sarasa Term SC fonts already up to date"
+  fi
+}
+
 install_brew_packages() {
   local pkg
   for pkg in "$@"; do
@@ -409,6 +455,7 @@ main() {
   install_bash_lsp
   install_ast_grep_cli
   ensure_repo
+  install_bundled_sarasa_term_sc_fonts
   bootstrap_emacs_packages_and_compile
   setup_treesitter
   setup_python
