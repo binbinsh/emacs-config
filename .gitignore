@@ -4,3 +4,4 @@ tree-sitter/
 eln-cache/
 custom.el
 *.elc
+.codex
