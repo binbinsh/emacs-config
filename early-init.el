@@ -23,6 +23,20 @@
              (not (my/terminfo-exists-p term)))
     (setenv "TERM" "xterm-256color")))
 
+;; Eat starts child shells with one of these TERM values.  Emacs sees them
+;; before packages are initialized, so reuse the built-in xterm terminal setup.
+(defconst my/eat-xterm-compatible-terms
+  '("eat-mono" "eat-color" "eat-256color" "eat-truecolor")
+  "Eat TERM values that should use Emacs' built-in xterm setup.")
+
+(dolist (term my/eat-xterm-compatible-terms)
+  (add-to-list 'term-file-aliases (cons term "xterm")))
+
+(when (and (not (display-graphic-p))
+           (fboundp 'tty-run-terminal-initialization)
+           (member (getenv "TERM") my/eat-xterm-compatible-terms))
+  (tty-run-terminal-initialization (selected-frame) "xterm"))
+
 ;; ============================================================================
 ;; 1. GC AND STARTUP OPTIMIZATION
 ;; 2. Package Archives

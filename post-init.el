@@ -1547,9 +1547,7 @@ With FORCE, refresh even when BUFFER is not visible."
   (use-package eat
     :commands (eat eat-other-window eat-project)
     :init
-    (setq eat-kill-buffer-on-exit t
-          ;; Force a conservative TERM for child shells in Eat.
-          eat-term-name "xterm-256color")
+    (setq eat-kill-buffer-on-exit t)
     :config
     (defun my/eat-mode-setup ()
       "Disable distracting visual indicators in terminal buffers."
