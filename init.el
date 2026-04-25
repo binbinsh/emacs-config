@@ -499,10 +499,10 @@
 ;; 5. THEME AND FONTS
 ;; ============================================================================
 
-;; Load theme synchronously (user sees this immediately)
-(use-package monokai-pro-theme
-  :config
-  (load-theme 'monokai-pro-octagon t))
+;; Load theme synchronously (user sees this immediately).
+(add-to-list 'custom-theme-load-path
+             (expand-file-name "themes" user-emacs-directory))
+(load-theme 'vercel t)
 
 ;; Font setup
 (require 'cl-lib)

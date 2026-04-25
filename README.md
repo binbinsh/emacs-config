@@ -160,6 +160,7 @@ If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
 ├── init.el                 # minimal sync init + async trigger
 ├── post-init.el            # async feature loading
 ├── bootstrap.sh            # one-command setup helper
+├── themes/                 # repo-local custom themes
 ├── tree-sitter/            # precompiled tree-sitter grammars
 └── .venv/                  # optional local Python env
 ```
