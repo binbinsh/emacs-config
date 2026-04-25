@@ -2,9 +2,6 @@
 
 set -euo pipefail
 
-REPO_DIR="$HOME/.emacs.d"
-REPO_URL="https://github.com/binbinsh/emacs-config.git"
-
 log() { printf "\033[1;32m[✔]\033[0m %s\n" "$*"; }
 info() { printf "\033[1;34m[i]\033[0m %s\n" "$*"; }
 warn() { printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
@@ -12,11 +9,94 @@ err() { printf "\033[1;31m[✘]\033[0m %s\n" "$*"; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+default_repo_dir() {
+  local source="${BASH_SOURCE[0]:-}"
+  local script_dir
+
+  if [ -n "$source" ] && [ "$source" != "bash" ] && [ -e "$source" ]; then
+    script_dir="$(cd "$(dirname "$source")" && pwd -P)"
+    if [ -d "$script_dir/.git" ] && [ -f "$script_dir/bootstrap.sh" ] && [ -f "$script_dir/init.el" ]; then
+      printf '%s\n' "$script_dir"
+      return 0
+    fi
+  fi
+
+  printf '%s\n' "$HOME/.emacs.d"
+}
+
+REPO_DIR="${REPO_DIR:-$(default_repo_dir)}"
+REPO_URL="${REPO_URL:-https://github.com/binbinsh/emacs-config.git}"
+
 ensure_path() {
   case :"$PATH": in
     *:"$1":*) ;;
     *) export PATH="$1:$PATH" ;;
   esac
+}
+
+ensure_homebrew_path() {
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
+brew_install_formulae_if_missing() {
+  local formula
+  local missing=()
+
+  for formula in "$@"; do
+    if ! brew list --formula "$formula" >/dev/null 2>&1; then
+      missing+=("$formula")
+    fi
+  done
+
+  if [ "${#missing[@]}" -gt 0 ]; then
+    info "Installing Homebrew formulae: ${missing[*]}"
+    brew install "${missing[@]}"
+  fi
+}
+
+brew_install_casks_if_missing() {
+  local cask
+  local missing=()
+
+  for cask in "$@"; do
+    if ! brew list --cask "$cask" >/dev/null 2>&1; then
+      missing+=("$cask")
+    fi
+  done
+
+  if [ "${#missing[@]}" -gt 0 ]; then
+    info "Installing Homebrew casks: ${missing[*]}"
+    brew install --cask "${missing[@]}"
+  fi
+}
+
+install_macos() {
+  info "Detected macOS"
+  ensure_homebrew_path
+
+  if ! have brew; then
+    err "Homebrew not found. Install Homebrew first, then re-run bootstrap.sh."
+    exit 1
+  fi
+
+  brew_install_formulae_if_missing \
+    emacs git ripgrep fd cmake pkg-config libtool tree-sitter-cli \
+    fontconfig node@22 pandoc ffmpeg ffmpegthumbnailer poppler p7zip \
+    media-info exiftool uv bash-language-server typescript \
+    typescript-language-server ast-grep
+
+  brew_install_casks_if_missing 1password-cli
+
+  if brew list --formula node@22 >/dev/null 2>&1; then
+    ensure_path "/opt/homebrew/opt/node@22/bin"
+    if ! have node; then
+      brew link node@22 --force --overwrite >/dev/null 2>&1 || true
+    fi
+  fi
 }
 
 file_needs_refresh() {
@@ -65,18 +145,6 @@ install_bundled_sarasa_term_sc_fonts() {
   fi
 }
 
-install_brew_packages() {
-  local pkg
-  for pkg in "$@"; do
-    if brew list "$pkg" >/dev/null 2>&1; then
-      info "brew package already installed: $pkg"
-    else
-      info "Installing brew package: $pkg"
-      brew install "$pkg" || warn "Failed to install brew package: $pkg"
-    fi
-  done
-}
-
 install_apt_packages() {
   local pkg
   for pkg in "$@"; do
@@ -89,43 +157,39 @@ install_apt_packages() {
   done
 }
 
-OS="$(uname -s)"
-
-install_macos() {
-  info "Detected macOS"
-  # Ensure Homebrew
-  if ! have brew; then
-    warn "Homebrew not found. Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # Add default Apple Silicon path; Intel will usually be in /usr/local/bin
-    [ -d "/opt/homebrew/bin" ] && ensure_path "/opt/homebrew/bin"
-    [ -d "/usr/local/bin" ] && ensure_path "/usr/local/bin"
+ensure_fd_alias() {
+  if have fdfind && ! have fd; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+    ensure_path "$HOME/.local/bin"
+    info "Linked fdfind to ~/.local/bin/fd"
   fi
-
-  # Install Emacs app (Homebrew cask)
-  if ! brew list --cask emacs-app >/dev/null 2>&1; then
-    info "Installing emacs-app cask"
-    brew install --cask emacs-app || warn "Failed to install emacs-app cask"
-  else
-    info "emacs-app already installed"
-  fi
-
-  # emacs-app cask handles /Applications linkage automatically.
-
-  # CLI deps: search, git, and preview toolchain
-  install_brew_packages \
-    git ripgrep fd cmake pkg-config libtool \
-    ffmpeg ffmpegthumbnailer poppler p7zip exiftool mediainfo \
-    node pandoc ast-grep
-
-  # Nerd Fonts Symbols Only (provides "Symbols Nerd Font Mono" for icons)
-  if ! brew list font-symbols-only-nerd-font >/dev/null 2>&1; then
-    brew install font-symbols-only-nerd-font || warn "Failed to install Symbols Nerd Font via Homebrew"
-  fi
-
-  log "Nerd Font installation step completed"
-  log "macOS base dependencies installed"
 }
+
+require_command() {
+  local cmd="$1"
+  if have "$cmd"; then
+    return 0
+  fi
+  err "Required command not found: $cmd"
+  return 1
+}
+
+verify_bootstrap_requirements() {
+  local missing=0
+
+  require_command git || missing=1
+  require_command emacs || missing=1
+
+  if [ "$missing" -ne 0 ]; then
+    exit 1
+  fi
+
+  have cc || warn "C compiler not found; tree-sitter grammar compilation may fail"
+  have cmake || warn "cmake not found; tree-sitter grammar compilation may fail"
+}
+
+OS="$(uname -s)"
 
 install_debian() {
   info "Detected Debian/Linux"
@@ -140,13 +204,7 @@ install_debian() {
     nodejs npm xdg-utils file pandoc \
     ffmpeg ffmpegthumbnailer poppler-utils \
     p7zip-full mediainfo libimage-exiftool-perl
-
-  # Provide `fd` alias if only fdfind exists
-  if have fdfind && ! have fd; then
-    mkdir -p "$HOME/.local/bin"
-    ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
-    ensure_path "$HOME/.local/bin"
-  fi
+  ensure_fd_alias
 
   # Nerd Fonts Symbols Only (provides "Symbols Nerd Font Mono" for icons)
   dest_sym="$HOME/.local/share/fonts/NerdFonts/SymbolsOnly"
@@ -166,24 +224,83 @@ install_debian() {
   log "Debian base dependencies installed"
 }
 
+prepare_host_environment() {
+  case "$OS" in
+    Linux)
+      install_debian
+      ;;
+    Darwin)
+      install_macos
+      ;;
+    *)
+      err "Unsupported OS: $OS"
+      exit 1
+      ;;
+  esac
+}
+
 install_uv() {
+  if have uv; then
+    ensure_path "$HOME/.local/bin"
+    log "uv ready: $(uv --version || true)"
+    return 0
+  fi
+
+  if [ "$OS" = Darwin ] && have brew; then
+    brew_install_formulae_if_missing uv
+    log "uv ready: $(uv --version || true)"
+    return 0
+  fi
+
   if ! have uv; then
     info "Installing uv (Python package manager)"
     curl -LsSf https://astral.sh/uv/install.sh | sh
   fi
   ensure_path "$HOME/.local/bin"
-  log "uv ready: $(uv --version || true)"
+  if have uv; then
+    log "uv ready: $(uv --version || true)"
+  else
+    warn "uv installation did not add `uv` to PATH"
+  fi
 }
 
 install_bash_lsp() {
-  info "Installing bash-language-server"
+  if have bash-language-server; then
+    info "bash-language-server already available"
+    return 0
+  fi
+
+  info "Ensuring bash-language-server is available"
+  if [ "$OS" = Darwin ] && have brew; then
+    brew_install_formulae_if_missing bash-language-server
+    return 0
+  fi
+
   if have npm; then
     npm install -g bash-language-server || warn "Failed to install bash-language-server via npm"
     log "bash-language-server ready: $(bash-language-server --version 2>/dev/null || echo 'installed')"
   else
-    warn "npm not found. Install Node.js to enable bash-language-server."
-    warn "  macOS: brew install node"
-    warn "  Debian: sudo apt install nodejs npm"
+    warn "npm not found. Install Node.js via Nix or your system package manager to enable bash-language-server."
+  fi
+}
+
+install_typescript_lsp() {
+  if have typescript-language-server && (have tsc || have tsserver); then
+    info "TypeScript language tooling already available"
+    return 0
+  fi
+
+  info "Ensuring TypeScript language tooling is available"
+  if [ "$OS" = Darwin ] && have brew; then
+    brew_install_formulae_if_missing typescript typescript-language-server
+    return 0
+  fi
+
+  if have npm; then
+    npm install -g typescript typescript-language-server || warn "Failed to install TypeScript language tooling via npm"
+    log "typescript-language-server ready: $(typescript-language-server --version 2>/dev/null || echo 'installed')"
+  else
+    warn "npm not found. Install Node.js via Nix or your system package manager to enable deep TypeScript support."
   fi
 }
 
@@ -191,6 +308,10 @@ install_ast_grep_cli() {
   info "Ensuring ast-grep CLI is available"
   if have ast-grep || have sg; then
     info "ast-grep CLI already available"
+    return 0
+  fi
+  if [ "$OS" = Darwin ] && have brew; then
+    brew_install_formulae_if_missing ast-grep
     return 0
   fi
   if have npm; then
@@ -395,7 +516,14 @@ ELISP
 ensure_repo() {
   if [ -d "$REPO_DIR/.git" ]; then
     info "Repo already exists at $REPO_DIR"
+  elif [ -e "$REPO_DIR" ]; then
+    err "$REPO_DIR exists but is not a git checkout"
+    exit 1
   else
+    if ! have git; then
+      err "git not found; cannot clone $REPO_URL"
+      exit 1
+    fi
     info "Cloning repo to $REPO_DIR"
     git clone "$REPO_URL" "$REPO_DIR"
   fi
@@ -429,6 +557,11 @@ setup_treesitter() {
 }
 
 setup_python() {
+  if ! have uv; then
+    warn "uv not found; skipping repo-local Python tooling setup"
+    return 0
+  fi
+
   info "Setting up Python tooling via uv in $REPO_DIR"
   cd "$REPO_DIR"
   if [ ! -d .venv ]; then
@@ -445,16 +578,15 @@ setup_python() {
 }
 
 main() {
-  case "$OS" in
-    Darwin) install_macos ;;
-    Linux) install_debian ;;
-    *) err "Unsupported OS: $OS"; exit 1 ;;
-  esac
+  ensure_repo
+  prepare_host_environment
+  ensure_fd_alias
+  verify_bootstrap_requirements
   verify_emacs_version
   install_uv
   install_bash_lsp
+  install_typescript_lsp
   install_ast_grep_cli
-  ensure_repo
   install_bundled_sarasa_term_sc_fonts
   bootstrap_emacs_packages_and_compile
   setup_treesitter
@@ -465,9 +597,9 @@ main() {
 Done!
 
 Next steps:
-- Launch Emacs and enjoy. On Debian, ensure an emoji/CJK-capable font is selected (Noto packages installed).
+- Launch Emacs and enjoy.
 - First launch should be near-ready: packages are pre-installed and all installed packages/config were byte-compiled during bootstrap.
-- If `fd` command is missing, we created a symlink to `fdfind` in ~/.local/bin.
+- If `fd` command was missing but `fdfind` existed, we created a symlink in ~/.local/bin.
 - For full feature set, verify commands exist: `ffmpegthumbnailer`, `pdftoppm`, `7zz`/`7z`, `mediainfo`, `exiftool`, `pandoc`, `ast-grep`/`sg`.
 
 Tip: Re-run this installer any time; it is safe and idempotent.

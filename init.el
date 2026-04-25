@@ -33,6 +33,13 @@
     (add-to-list 'exec-path local-bin)
     (setenv "PATH" (concat local-bin path-separator (getenv "PATH")))))
 
+;; TypeScript/TSX files should resolve correctly even before async features load.
+(dolist (entry '(("\\.ts\\'" . typescript-ts-mode)
+                 ("\\.mts\\'" . typescript-ts-mode)
+                 ("\\.cts\\'" . typescript-ts-mode)
+                 ("\\.tsx\\'" . tsx-ts-mode)))
+  (add-to-list 'auto-mode-alist entry))
+
 ;; ============================================================================
 ;; 2. USER PROFILE
 ;; ============================================================================

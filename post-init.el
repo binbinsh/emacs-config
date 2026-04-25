@@ -1780,6 +1780,19 @@ Each element is either DIR or (DIR . DEPTH)."
           lsp-ui-sideline-show-code-actions t
           lsp-ui-sideline-show-diagnostics t))
 
+  ;; `lsp-javascript.el` is bundled inside `lsp-mode`; there is no separate
+  ;; `lsp-javascript` package in current archives.
+  (use-package lsp-javascript
+    :ensure nil
+    :after lsp-mode
+    :init
+    (setq lsp-clients-typescript-prefer-use-project-ts-server t
+          lsp-javascript-display-parameter-name-hints "literals"
+          lsp-javascript-display-parameter-type-hints t
+          lsp-javascript-display-property-declaration-type-hints t
+          lsp-javascript-display-return-type-hints t
+          lsp-javascript-display-variable-type-hints t))
+
   ;; LSP preferences
   (with-eval-after-load 'lsp-mode
     (setq lsp-completion-provider :capf
@@ -1789,7 +1802,7 @@ Each element is either DIR or (DIR . DEPTH)."
   (use-package treesit-auto
     :if (and (fboundp 'treesit-available-p) (treesit-available-p))
     :init
-    (setq treesit-auto-install nil)  ; grammars pre-compiled by install-emacs.sh
+    (setq treesit-auto-install nil)  ; grammars pre-compiled by bootstrap.sh
     (setq treesit-extra-load-path
           (list (expand-file-name "tree-sitter" user-emacs-directory)))
     ;; Pin grammars to version 14
@@ -1848,6 +1861,37 @@ Each element is either DIR or (DIR . DEPTH)."
     :mode (("\\.html?\\'" . web-mode)
            ("\\.jsx\\'" . web-mode))
     :init (add-hook 'web-mode-hook #'lsp-deferred)))
+
+(my/load-feature "typescript"
+  (defun my/typescript-lsp-format+imports ()
+    "Organize imports and format the current TypeScript buffer before save."
+    (when (and (bound-and-true-p lsp-mode)
+               (derived-mode-p 'typescript-ts-mode 'tsx-ts-mode))
+      (lsp-organize-imports)
+      (lsp-format-buffer)))
+
+  (defun my/typescript-setup ()
+    "Enable TypeScript-specific editing helpers in the current buffer."
+    (setq-local lsp-inlay-hint-enable t)
+    (add-hook 'before-save-hook #'my/typescript-lsp-format+imports nil t))
+
+  (defun my/typescript-enable-inlay-hints ()
+    "Show LSP inlay hints for TypeScript buffers after LSP starts."
+    (when (and (derived-mode-p 'typescript-ts-mode 'tsx-ts-mode)
+               (fboundp 'lsp-inlay-hints-mode))
+      (lsp-inlay-hints-mode 1)))
+
+  (add-hook 'typescript-ts-mode-hook #'my/typescript-setup)
+  (add-hook 'tsx-ts-mode-hook #'my/typescript-setup)
+  (add-hook 'lsp-mode-hook #'my/typescript-enable-inlay-hints)
+
+  ;; Buffers opened before async language modules finish loading still need
+  ;; TypeScript helpers and LSP attached retroactively.
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'typescript-ts-mode 'tsx-ts-mode)
+        (my/typescript-setup)
+        (lsp-deferred)))))
 
 (my/load-feature "yaml-mode"
   (use-package yaml-mode :mode ("\\.ya?ml\\'" . yaml-mode)))

@@ -1,4 +1,4 @@
-# Emacs Config (macOS + Debian)
+# Emacs Config (Homebrew macOS + Linux)
 
 ![Screenshot](https://raw.githubusercontent.com/binbinsh/emacs-config/main/screenshot.png)
 
@@ -13,10 +13,13 @@ This is a lightweight Emacs setup focused on speed and daily workflow quality.
 ## Install
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/main/bootstrap.sh)"
+git clone https://github.com/binbinsh/emacs-config.git ~/.emacs.d
+~/.emacs.d/bootstrap.sh
 ```
 
-`bootstrap.sh` pre-installs packages, configures tooling, and prepares cache-related resources.
+If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
+
+`bootstrap.sh` is now Homebrew-first on macOS and keeps the existing `apt` flow on Debian/Linux.
 
 ## Function: Performance and UI
 
@@ -110,6 +113,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 ## Function: Editing and Language Features
 
 - LSP, consult, embark, corfu/cape, treesit are wired for language work
+- TypeScript / TSX gets `typescript-ts-mode` + `tsx-ts-mode`, `typescript-language-server`, project-local `tsserver` preference, inlay hints, and save-time import organization + formatting
 - Helpful / which-key / docs and navigation helpers integrated
 
 | Key | Scope | Action |
@@ -157,12 +161,18 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 ├── post-init.el            # async feature loading
 ├── bootstrap.sh            # one-command setup helper
 ├── tree-sitter/            # precompiled tree-sitter grammars
-└── .venv/                  # local Python env created by bootstrap
+└── .venv/                  # optional local Python env
 ```
 
 ## Dependencies
 
-### Required
+### macOS
+- Homebrew
+- `git`
+
+Homebrew is the expected package manager on macOS for Emacs, `rg`, `fd`, `uv`, `ast-grep`, `pandoc`, preview helpers, the Node-based language servers, and `op` (`1password-cli`) when you use 1Password.
+
+### Linux
 - Emacs 30+
 - `git`, `ripgrep`
 - `fd` or `fd-find`
@@ -176,6 +186,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/binbinsh/emacs-config/ma
 - `mediainfo`, `exiftool`
 - `p7zip` / `p7zip-full`
 - `nodejs`, `npm`
+- `typescript`, `typescript-language-server` for deep TypeScript / TSX IDE support
 - `pandoc`
 
 ## Cache Paths
