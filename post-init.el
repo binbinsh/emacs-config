@@ -1815,6 +1815,7 @@ Each element is either DIR or (DIR . DEPTH)."
             (json "https://github.com/tree-sitter/tree-sitter-json" "v0.24.8")
             (go "https://github.com/tree-sitter/tree-sitter-go" "v0.23.4")
             (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.23.3")
+            (zig "https://github.com/tree-sitter-grammars/tree-sitter-zig" "v1.1.2")
             (dart "https://github.com/ast-grep/tree-sitter-dart" "master")))
     ;; Mode remapping
     (let ((remaps '((python-mode . python-ts-mode)
@@ -1830,11 +1831,29 @@ Each element is either DIR or (DIR . DEPTH)."
 
   ;; LSP hooks for ts-modes
   (let ((ts-modes '(python-ts-mode js-ts-mode typescript-ts-mode tsx-ts-mode
-                    go-ts-mode rust-ts-mode bash-ts-mode json-ts-mode)))
+                    go-ts-mode rust-ts-mode bash-ts-mode json-ts-mode
+                    zig-ts-mode)))
     (when (fboundp 'dart-ts-mode)
       (setq ts-modes (append ts-modes '(dart-ts-mode))))
     (dolist (mode ts-modes)
       (add-hook (intern (concat (symbol-name mode) "-hook")) #'lsp-deferred))))
+
+(my/load-feature "zig"
+  (use-package zig-ts-mode
+    :if (and (fboundp 'treesit-available-p) (treesit-available-p))
+    :mode (("\\.zig\\'" . zig-ts-mode)
+           ("\\.zon\\'" . zig-ts-mode))
+    :functions (zig-ts-build zig-ts-run zig-ts-test)
+    :config
+    (dolist (key '("C-c C-b C-b" "C-c C-b C-e" "C-c C-b C-l"
+                   "C-c C-b C-o" "C-c C-r" "C-c C-t"))
+      (define-key zig-ts-mode-map (kbd key) nil))
+    (define-key zig-ts-mode-map (kbd "C-c z") #'zig-ts-build)
+    (define-key zig-ts-mode-map (kbd "C-c R") #'zig-ts-run)
+    (define-key zig-ts-mode-map (kbd "C-c T") #'zig-ts-test))
+
+  (with-eval-after-load 'lsp-mode
+    (require 'lsp-zig)))
 
 (my/load-feature "dart"
   (use-package dart-mode

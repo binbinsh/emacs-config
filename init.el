@@ -40,6 +40,14 @@
                  ("\\.tsx\\'" . tsx-ts-mode)))
   (add-to-list 'auto-mode-alist entry))
 
+;; Zig files should resolve correctly before async features load once the package
+;; has been installed by bootstrap or a previous startup.
+(when (locate-library "zig-ts-mode")
+  (autoload 'zig-ts-mode "zig-ts-mode" nil t)
+  (dolist (entry '(("\\.zig\\'" . zig-ts-mode)
+                   ("\\.zon\\'" . zig-ts-mode)))
+    (add-to-list 'auto-mode-alist entry)))
+
 ;; ============================================================================
 ;; 2. USER PROFILE
 ;; ============================================================================

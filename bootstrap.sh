@@ -87,7 +87,7 @@ install_macos() {
     emacs git ripgrep fd cmake pkg-config libtool tree-sitter-cli \
     fontconfig node@22 pandoc ffmpeg ffmpegthumbnailer poppler p7zip \
     media-info exiftool uv bash-language-server typescript \
-    typescript-language-server ast-grep
+    typescript-language-server ast-grep zig zls
 
   brew_install_casks_if_missing 1password-cli
 
@@ -321,6 +321,21 @@ install_ast_grep_cli() {
   fi
 }
 
+install_zig_tooling() {
+  if have zig && have zls; then
+    info "Zig tooling already available"
+    return 0
+  fi
+
+  info "Ensuring Zig tooling is available"
+  if [ "$OS" = Darwin ] && have brew; then
+    brew_install_formulae_if_missing zig zls
+    return 0
+  fi
+
+  warn "Install zig and zls with your system package manager for Zig LSP support."
+}
+
 verify_emacs_version() {
   if ! have emacs; then
     warn "emacs command not found in PATH; skip version check"
@@ -546,6 +561,7 @@ setup_treesitter() {
             (json \"https://github.com/tree-sitter/tree-sitter-json\" \"v0.24.8\")
             (go \"https://github.com/tree-sitter/tree-sitter-go\" \"v0.23.4\")
             (rust \"https://github.com/tree-sitter/tree-sitter-rust\" \"v0.23.3\")
+            (zig \"https://github.com/tree-sitter-grammars/tree-sitter-zig\" \"v1.1.2\")
             (dart \"https://github.com/ast-grep/tree-sitter-dart\" \"master\")))
     (dolist (lang (mapcar #'car treesit-language-source-alist))
       (unless (treesit-language-available-p lang)
@@ -587,6 +603,7 @@ main() {
   install_bash_lsp
   install_typescript_lsp
   install_ast_grep_cli
+  install_zig_tooling
   install_bundled_sarasa_term_sc_fonts
   bootstrap_emacs_packages_and_compile
   setup_treesitter

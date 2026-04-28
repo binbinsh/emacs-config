@@ -114,6 +114,7 @@ If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
 
 - LSP, consult, embark, corfu/cape, treesit are wired for language work
 - TypeScript / TSX gets `typescript-ts-mode` + `tsx-ts-mode`, `typescript-language-server`, project-local `tsserver` preference, inlay hints, and save-time import organization + formatting
+- Zig gets `zig-ts-mode`, a precompiled tree-sitter grammar, and `zls` LSP support
 - Helpful / which-key / docs and navigation helpers integrated
 
 | Key | Scope | Action |
@@ -123,6 +124,9 @@ If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
 | `C-c f` | `lsp-mode` | Format buffer |
 | `C-c i` | `lsp-mode` | Organize imports |
 | `C-c t` | `python-mode` | Run pytest via uv |
+| `C-c z` | `zig-ts-mode` | Build Zig project |
+| `C-c R` | `zig-ts-mode` | Run current Zig buffer |
+| `C-c T` | `zig-ts-mode` | Test current Zig buffer |
 | `C-c >` | global | Mark next-like-this |
 | `s-d` | global | Mark next-like-this |
 
@@ -188,6 +192,7 @@ Homebrew is the expected package manager on macOS for Emacs, `rg`, `fd`, `uv`, `
 - `p7zip` / `p7zip-full`
 - `nodejs`, `npm`
 - `typescript`, `typescript-language-server` for deep TypeScript / TSX IDE support
+- `zig`, `zls` for Zig IDE support
 - `pandoc`
 
 ## Cache Paths
