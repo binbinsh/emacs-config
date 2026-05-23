@@ -338,6 +338,16 @@
          (mapconcat #'identity table-lines "\n")
        "No post-init modules registered yet."))))
 
+(defun my/startup-profile--goto-start (buffer)
+  "Move BUFFER and every visible window showing it to the beginning."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (let ((start (point-min)))
+        (goto-char start)
+        (dolist (window (get-buffer-window-list buffer nil t))
+          (set-window-point window start)
+          (set-window-start window start t))))))
+
 (defun my/startup-profile-refresh ()
   "Refresh startup profile in the default startup buffer."
   (setq my/startup-profile--refresh-timer nil)
@@ -366,7 +376,8 @@
               (setq my/startup-profile--region
                     (cons (copy-marker start t)
                           (copy-marker (point) nil)))))
-          (set-buffer-modified-p nil))))))
+          (set-buffer-modified-p nil)))
+      (my/startup-profile--goto-start buffer))))
 
 (defun my/startup-profile-queue-refresh ()
   "Queue startup profile redraw."
@@ -507,28 +518,47 @@
 ;; Font setup
 (require 'cl-lib)
 
+(when (boundp 'ns-use-thin-smoothing)
+  (setq ns-use-thin-smoothing t))
+
 (defconst my/gui-default-font-size
   (cond
    ((eq system-type 'darwin) 14)
-   ((eq system-type 'gnu/linux) 11)
-   (t 11))
+   ((eq system-type 'gnu/linux) 13)
+   (t 13))
   "Preferred default font size for GUI frames on the current system.")
 
-(defconst my/system-default-english-font-candidates
+(defconst my/gui-cjk-font-size
   (cond
-   ((eq system-type 'darwin)
-    '("Sarasa Term SC" "Monospace"))
-   ((eq system-type 'gnu/linux)
-    '("Sarasa Term SC" "Monospace"))
-   (t '("Monospace")))
-  "Preferred English monospace font families for GUI frames.")
+   ((eq system-type 'darwin) 13)
+   ((eq system-type 'gnu/linux) my/gui-default-font-size)
+   (t my/gui-default-font-size))
+  "Preferred CJK font size for GUI frames on the current system.")
+
+(defconst my/gui-default-line-spacing
+  (cond
+   ((eq system-type 'darwin) 1)
+   ((eq system-type 'gnu/linux) 2)
+   (t 2))
+  "Extra pixel spacing between GUI text lines.")
+
+(defconst my/gui-default-font-weight 'light
+  "Preferred default font weight for GUI frames.")
+
+(defconst my/gui-default-font-name "Ioskeley Mono"
+  "Preferred default font name for GUI frames.")
 
 (defconst my/system-default-cjk-font-candidates
   (cond
    ((eq system-type 'darwin)
-    '("PingFang SC" "Sarasa Mono SC" "Hiragino Sans GB" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
+    '("PingFang SC" "Hiragino Sans GB" "Noto Sans CJK SC" "Source Han Sans SC"
+      "Sarasa Term SC" "Sarasa Mono SC"))
+   ((eq system-type 'windows-nt)
+    '("Microsoft YaHei UI" "Microsoft YaHei" "DengXian"
+      "Noto Sans CJK SC" "Source Han Sans SC" "Sarasa Term SC"))
    ((eq system-type 'gnu/linux)
-    '("Sarasa Term SC" "Sarasa Mono SC" "Noto Sans Mono CJK SC" "Noto Sans CJK SC"))
+    '("Noto Sans CJK SC" "Source Han Sans SC" "Source Han Sans CN"
+      "Sarasa UI SC" "Sarasa Gothic SC" "Sarasa Term SC" "WenQuanYi Micro Hei"))
    (t '("Monospace")))
   "Preferred CJK font families for GUI frames.")
 
@@ -541,69 +571,27 @@
   "Return first available font from FONTS list."
   (cl-find-if #'my/font-available-p fonts))
 
-(defvar my/bundled-sarasa-term-sc-font-ensured nil
-  "Non-nil once bundled Sarasa Term SC font installation has been attempted this session.")
-
-(defconst my/bundled-sarasa-term-sc-font-pattern "\\`SarasaTermSC-.*\\.ttf\\'"
-  "Filename pattern for bundled Sarasa Term SC font files.")
-
-(defun my/file-needs-refresh-p (source dest)
-  "Return non-nil when DEST should be refreshed from SOURCE."
-  (let ((source-attrs (and (file-exists-p source)
-                           (file-attributes source 'string)))
-        (dest-attrs (and (file-exists-p dest)
-                         (file-attributes dest 'string))))
-    (and source-attrs
-         (or (null dest-attrs)
-             (/= (file-attribute-size source-attrs)
-                 (file-attribute-size dest-attrs))
-             (time-less-p (file-attribute-modification-time dest-attrs)
-                          (file-attribute-modification-time source-attrs))))))
-
-(defun my/ensure-bundled-sarasa-term-sc-font ()
-  "Install bundled Sarasa Term SC fonts for current user when needed."
-  (unless my/bundled-sarasa-term-sc-font-ensured
-    (setq my/bundled-sarasa-term-sc-font-ensured t)
-    (let* ((source-dir (expand-file-name "assets" user-emacs-directory))
-           (sources (and (file-directory-p source-dir)
-                         (sort (directory-files source-dir t my/bundled-sarasa-term-sc-font-pattern)
-                               #'string<)))
-           (dest-dir (cond
-                      ((eq system-type 'darwin) (expand-file-name "~/Library/Fonts"))
-                      ((eq system-type 'gnu/linux) (expand-file-name "~/.local/share/fonts/emacs-bundled"))
-                      (t nil)))
-           (updated nil))
-      (when (and dest-dir sources)
-        (make-directory dest-dir t)
-        (dolist (source sources)
-          (let ((dest (expand-file-name (file-name-nondirectory source) dest-dir)))
-            (when (my/file-needs-refresh-p source dest)
-              (copy-file source dest t)
-              (setq updated t))))
-        (when updated
-          (when (and (eq system-type 'gnu/linux) (executable-find "fc-cache"))
-            ;; Refresh only when the bundled fonts changed on disk.
-            (call-process "fc-cache" nil nil nil dest-dir))
-          (when (fboundp 'clear-font-cache)
-            (clear-font-cache))
-          t)))))
-
 (defun my/preferred-english-font-family ()
-  "Return preferred English GUI font, installing bundled fallback if needed."
-  (my/ensure-bundled-sarasa-term-sc-font)
-  (or (my/find-first-font my/system-default-english-font-candidates)
+  "Return preferred English GUI font."
+  my/gui-default-font-name)
+
+(defun my/preferred-cjk-font-family ()
+  "Return preferred CJK GUI font."
+  (or (my/find-first-font my/system-default-cjk-font-candidates)
       "Monospace"))
 
-(defun my/set-default-frame-font (font-family)
-  "Use FONT-FAMILY for newly created GUI frames."
+(defun my/set-default-frame-font (font-name)
+  "Use FONT-NAME for newly created GUI frames."
   (setf (alist-get 'font default-frame-alist nil nil #'eq)
-        (format "%s-%d" font-family my/gui-default-font-size)))
+        (format "%s-%d" font-name my/gui-default-font-size)))
 
 (defun my/describe-gui-font ()
   "Report the current default GUI font selection."
   (interactive)
-  (message "default-family=%s default-font=%s frame-font=%s"
+  (message "default-family=%s cjk-family=%s default-weight=%s default-font=%s frame-font=%s"
            (face-attribute 'default :family nil t)
+           (my/preferred-cjk-font-family)
+           (face-attribute 'default :weight nil t)
            (face-attribute 'default :font nil t)
            (frame-parameter nil 'font)))
 
@@ -613,19 +601,24 @@
     (with-selected-frame target-frame
       (when (display-graphic-p)
         (let* ((english (my/preferred-english-font-family))
-               ;; Prefer a monospaced CJK font so Chinese comments/code do not look too wide.
-               (cjk (or (my/find-first-font my/system-default-cjk-font-candidates)
-                        "Monospace"))
+               (cjk (my/preferred-cjk-font-family))
                (emoji (my/find-first-font '("Apple Color Emoji" "Noto Color Emoji")))
                (symbols (or (my/find-first-font '("Symbols Nerd Font Mono"
                                                   "Symbols Nerd Font"))
                             english)))
           (my/set-default-frame-font english)
           (set-face-attribute 'default target-frame
-                              :family english
+                              :font (font-spec :family english
+                                               :size my/gui-default-font-size
+                                               :weight my/gui-default-font-weight)
+                              :weight my/gui-default-font-weight
                               :height (* my/gui-default-font-size 10))
-          (dolist (charset '(han kana cjk-misc bopomofo))
-            (set-fontset-font t charset (font-spec :name cjk)))
+          (setq-default line-spacing my/gui-default-line-spacing)
+          (when cjk
+            (dolist (charset '(han kana cjk-misc bopomofo))
+              (set-fontset-font t charset
+                                (font-spec :family cjk
+                                           :size my/gui-cjk-font-size))))
           (when emoji (set-fontset-font t 'emoji (font-spec :name emoji) nil 'prepend))
           ;; Powerline symbols (U+E0A0-U+E0D4) - use Nerd Font
           (set-fontset-font t '(#xe0a0 . #xe0d4) (font-spec :family symbols))
@@ -635,6 +628,7 @@
 
 (when (display-graphic-p)
   (my/apply-fonts))
+(add-hook 'emacs-startup-hook #'my/apply-fonts)
 (add-hook 'after-make-frame-functions #'my/apply-fonts)
 
 ;; ============================================================================
@@ -691,6 +685,30 @@
 
 (defvar my/terminal-buffer-name "*terminal*"
   "Dedicated terminal buffer name used by `my/toggle-terminal'.")
+
+(defconst my/eat-compatible-term-name "xterm-256color"
+  "TERM value used for Eat shells to avoid zsh redraw issues with eat-* terminfo.")
+
+(defconst my/system-terminfo-directory
+  (cond
+   ((file-directory-p "/usr/share/terminfo") "/usr/share/terminfo")
+   ((file-directory-p "/opt/homebrew/share/terminfo") "/opt/homebrew/share/terminfo")
+   ((file-directory-p "/usr/local/share/terminfo") "/usr/local/share/terminfo"))
+  "System terminfo directory used with `my/eat-compatible-term-name'.")
+
+(with-eval-after-load 'eat
+  (when (fboundp 'my/eat-exec-with-compatible-shell-env)
+    (advice-remove 'eat-exec #'my/eat-exec-with-compatible-shell-env))
+  (when (fboundp 'my/disable-multiple-cursors)
+    (remove-hook 'eat-mode-hook #'my/disable-multiple-cursors))
+  (setq eat-term-name my/eat-compatible-term-name)
+  (when my/system-terminfo-directory
+    (setq eat-term-terminfo-directory my/system-terminfo-directory)))
+
+(with-eval-after-load 'multiple-cursors
+  (when (boundp 'my/terminal-multiple-cursors-run-once-commands)
+    (dolist (command my/terminal-multiple-cursors-run-once-commands)
+      (setq mc/cmds-to-run-once (delq command mc/cmds-to-run-once)))))
 
 (defun my/toggle-terminal ()
   "Toggle a bottom terminal panel powered by `eat`."
