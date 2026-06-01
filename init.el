@@ -636,10 +636,37 @@
 ;; ============================================================================
 
 ;; Dired sorting: keep local and TRAMP listings deterministic.
+(require 'project)
 (require 'ls-lisp)
 (setq ls-lisp-use-insert-directory-program nil
       ls-lisp-dirs-first t
       ls-lisp-use-string-collate nil)
+
+(defun my/file-manager-root-directory ()
+  "Return the current project root, falling back to `default-directory'."
+  (file-name-as-directory
+   (expand-file-name
+    (or (when-let ((project (ignore-errors (project-current))))
+          (project-root project))
+        default-directory))))
+
+(defun my/open-file-manager (&optional directory)
+  "Open DIRECTORY in Dirvish, falling back to Dired.
+When DIRECTORY is nil, open the current project root or `default-directory'."
+  (interactive)
+  (let ((dir (file-name-as-directory
+              (expand-file-name (or directory (my/file-manager-root-directory))))))
+    (if (fboundp 'dirvish)
+        (dirvish dir)
+      (dired dir))))
+
+(defun my/file-manager-dwim ()
+  "Open the project file manager, or show the Dired command panel from Dired."
+  (interactive)
+  (if (and (derived-mode-p 'dired-mode)
+           (fboundp 'my/file-manager-panel))
+      (call-interactively #'my/file-manager-panel)
+    (my/open-file-manager)))
 
 ;; Dirvish: modern dired UI - loaded early for `emacs -nw .` support
 (use-package dirvish
@@ -664,6 +691,7 @@
   ;; These two entry points should be available immediately after startup,
   ;; instead of waiting for async post-init keybinding setup.
   (global-set-key (kbd "C-x d") #'dirvish-dwim)
+  (global-set-key (kbd "C-c ;") #'my/file-manager-dwim)
   (with-eval-after-load 'dired
     (define-key dired-mode-map (kbd "C-c f") #'dirvish-fd))
   (with-eval-after-load 'dirvish-subtree

@@ -35,9 +35,9 @@ If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
 | Key | Action |
 |-----|--------|
 | `C-c e` | Focus/open Treemacs |
-| `C-c ;` | Open unified file-manager panel |
+| `C-c ;` | Open project Dirvish; in Dired, open unified file-manager panel |
 | `C-c ,` | Dirvish dispatch |
-| `C-c a` | Dirvish quick access |
+| `C-c a` | Dirvish quick access from anywhere |
 | `C-c f` | Dirvish fd search in current Dired/Dirvish directory, including VCS-ignored paths |
 | `C-c t` | Toggle Dirvish subtree |
 | `C-c E` | Dirvish emerge menu |
@@ -49,16 +49,16 @@ If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
 | `C-c A` | Add tag |
 | `C-c R` | Remove tag |
 | `C-c z` | Open files by tag |
-| `C-c S` | Restore session |
+| `C-c S` | Restore last Dired/Dirvish session |
 | `C-c H` | Toggle hidden files |
 | `C-c r` | Cycle sort order |
 | `C-c y` | Yank files |
 | `C-c X` | Cut files |
 | `C-c P` | Paste files |
-| `C-c O` | Cycle external opener policy |
+| `C-c O` | Cycle global external opener policy |
 | `C-c W` | Bulk rename (wdired) |
 | `C-c Y` | Copy current path |
-| `C-c m` | Open yazi-style session |
+| `C-c m` | Open project-root yazi-style two-pane session |
 | `V` | Toggle quick preview |
 | `!` | Open files via external app |
 | `C-x d` | Dirvish DWIM (available immediately at startup) |
@@ -75,7 +75,7 @@ If the repo is already present, re-run `~/.emacs.d/bootstrap.sh` only.
 | `C-c /` | project-wide ripgrep |
 | `C-c ?` | ast-grep search |
 | `C-c b` | switch buffers |
-| `C-c o` | open file |
+| `C-c o` | open project file (`C-u` for path prompt) |
 | `C-c j` | symbol/imenu jump |
 | `C-c d` | go to definition |
 | `C-c !` | open diagnostics |

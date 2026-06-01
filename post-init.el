@@ -391,6 +391,15 @@ Local directory-first ordering comes from `ls-lisp-dirs-first'."
             ("p" ,(expand-file-name "~/Projects/") "Projects")
             ("t" ,temporary-file-directory "Temp"))))
 
+  (defun my/dirvish-quick-access ()
+    "Open Dirvish quick access from any buffer."
+    (interactive)
+    (unless (fboundp 'dirvish-quick-access)
+      (require 'dirvish-quick-access nil t))
+    (unless (fboundp 'dirvish-quick-access)
+      (user-error "dirvish-quick-access is not available"))
+    (call-interactively #'dirvish-quick-access))
+
   (defconst my/dired-video-extensions
     '("mp4" "mkv" "mov" "avi" "webm" "flv" "wmv" "m4v")
     "Known video extensions for thumbnail/metadata.")
@@ -472,7 +481,8 @@ Local directory-first ordering comes from `ls-lisp-dirs-first'."
 
   (defun my/open-externally (file)
     "Open FILE with system app according to opener policy."
-    (interactive (list (or (dired-get-filename nil t)
+    (interactive (list (or (and (derived-mode-p 'dired-mode)
+                                (ignore-errors (dired-get-filename nil t)))
                            (buffer-file-name)
                            (read-file-name "File: "))))
     (let* ((target (my/external-open--prepare-local-file file))
@@ -1011,7 +1021,8 @@ Local directory-first ordering comes from `ls-lisp-dirs-first'."
   (defun my/dired-yazi-session ()
     "Open a yazi-like two-pane file manager session."
     (interactive)
-    (tc/dired-two-panes)
+    (let ((default-directory (my/file-manager-root-directory)))
+      (tc/dired-two-panes))
     (when (fboundp 'dirvish-layout-toggle)
       (ignore-errors (dirvish-layout-toggle))))
 
@@ -1398,9 +1409,7 @@ With FORCE, refresh even when BUFFER is not visible."
   ;; Keybindings
   (with-eval-after-load 'dired
     (let ((map dired-mode-map))
-      (define-key map (kbd "C-c ;") #'my/file-manager-panel)
       (define-key map (kbd "C-c ,") #'dirvish-dispatch)
-      (define-key map (kbd "C-c a") #'dirvish-quick-access)
       (define-key map (kbd "C-c t") #'dirvish-subtree-toggle)
       (define-key map (kbd "C-c E") #'dirvish-emerge-menu)
       (define-key map (kbd "C-c i") #'my/dired-show-metadata)
@@ -1411,16 +1420,13 @@ With FORCE, refresh even when BUFFER is not visible."
       (define-key map (kbd "C-c z") #'my/dired-tag-open)
       (define-key map (kbd "C-c A") #'my/dired-tag-add)
       (define-key map (kbd "C-c R") #'my/dired-tag-remove)
-      (define-key map (kbd "C-c S") #'my/dired-session-restore)
       (define-key map (kbd "C-c H") #'my/dired-toggle-hidden)
       (define-key map (kbd "C-c r") #'my/dired-cycle-sort)
       (define-key map (kbd "C-c y") #'my/dired-yank-files)
       (define-key map (kbd "C-c X") #'my/dired-cut-files)
       (define-key map (kbd "C-c P") #'my/dired-paste-files)
-      (define-key map (kbd "C-c O") #'my/external-open-policy-cycle)
       (define-key map (kbd "C-c W") #'my/dired-bulk-rename)
       (define-key map (kbd "C-c Y") #'my/dired-copy-path)
-      (define-key map (kbd "C-c m") #'my/dired-yazi-session)
       (define-key map (kbd "V") #'tc/dired-toggle-preview)
       (define-key map (kbd "!") #'my/dired-do-open)
       (define-key map (kbd ")") #'dired-git-info-mode)
@@ -2232,6 +2238,13 @@ Each element is either DIR or (DIR . DEPTH)."
            (dir (if proj (project-root proj) default-directory)))
       (consult-ripgrep dir)))
 
+  (defun my/find-file-dwim (&optional arg)
+    "Find a file in the current project.  With ARG, use plain `find-file'."
+    (interactive "P")
+    (if (and (not arg) (ignore-errors (project-current)))
+        (call-interactively #'project-find-file)
+      (call-interactively #'find-file)))
+
   (defun my/ast-grep-search ()
     "Run ast-grep search in project or current directory."
     (interactive)
@@ -2289,11 +2302,15 @@ Each element is either DIR or (DIR . DEPTH)."
 
   ;; C-c global shortcuts
   (global-set-key (kbd "C-c e") #'my/focus-explorer)
+  (global-set-key (kbd "C-c a") #'my/dirvish-quick-access)
+  (global-set-key (kbd "C-c m") #'my/dired-yazi-session)
+  (global-set-key (kbd "C-c O") #'my/external-open-policy-cycle)
+  (global-set-key (kbd "C-c S") #'my/dired-session-restore)
   (global-set-key (kbd "C-c G") #'my/git-command-panel)
   (global-set-key (kbd "C-c /") #'consult-ripgrep)
   (global-set-key (kbd "C-c ?") #'my/ast-grep-search)
   (global-set-key (kbd "C-c b") #'consult-buffer)
-  (global-set-key (kbd "C-c o") #'find-file)
+  (global-set-key (kbd "C-c o") #'my/find-file-dwim)
   (global-set-key (kbd "C-c u") #'vundo)
   (global-set-key (kbd "C-c [") #'tab-previous)
   (global-set-key (kbd "C-c ]") #'tab-next)
